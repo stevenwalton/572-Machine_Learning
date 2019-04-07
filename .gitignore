@@ -12,3 +12,6 @@ CMakeCache.txt
 Makefile
 *.png
 *.mp4
+*.log
+*.out
+*.aux
