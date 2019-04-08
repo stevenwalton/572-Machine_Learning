@@ -21,7 +21,7 @@
 
 %\tikzset{every tree node/.style={circle,align=center, anchor=west, grow=right}
 %	}
-\tikzset{every tree node/.style={minimum width=1em, draw, circle},
+\tikzset{every tree node/.style={align=center,minimum width=2em},%, draw},%, circle},
 	 grow=right,
 	 level distance=1.75cm}
 
@@ -87,10 +87,69 @@ and determine which attribute will be chosen as the root of the sub-tree in
 each branch.
 
 \ppart{a}
+Now that we know that Overcast has the highest information gain, of $0.246$, we
+will use it as the root node. We will then create the next nodes and show their
+corresponding values for playing tennis or not, in the form of $\big[+yes,-no\big]$
+
+\begin{tikzpicture}[grow=down,level distance=3cm]
+\Tree [.{Outlook\\$\big[+9,-6\big]$} [.{Sunny\\$\big[+2,-3\big]$} ] [.{Overcast\\$\big[+4,-0\big]$} ] [.{Rain\\$\big[+3,-2\big]$} ] ]
+\end{tikzpicture}
 
 \ppart{b}
+To determine how we will partition the data we will look at the entropy of each
+node.
+
+Given sunny, we have:
+
+Humidity: High $\big[+0,-3\big]$, Normal $\big[+2,-0\big]$
+
+Temperature: High $\big[+0,-2\big]$, Mild $\big[+1,-1\big]$, Cold $\big[+1,-0\big]$
+
+Wind: Strong $\big[+1,-1\big]$, Weak $\big[+1,-2\big]$
+
+\begin{align*}
+S(Sunny,Humidity) &= S_{sunny} - S_{sunny,high} - S_{sunny,low}\\
+	          &= S_{sunny} - \frac35(-1\log_2{1}) - \frac25(-1\log_2{1})\\
+		  &= 0.97 - \frac35 0 - \frac25 0\\
+		  &= 0.97
+\end{align*}
+We'll shorten steps from now on. We note that any $\big[+a,-a\big]=1$ and 
+$\big[+a,0\big] = \big[0,-a\big] = 0$
+\begin{align*}
+S(Sunny,Temperature) &= S_{sunny} - S_{sunny,hot} - S_{sunny,mild} - S_{sunny,cold}\\
+		     &= 0.97 - \frac250 - \frac251 - \frac250\\
+		     &= 0.57
+\end{align*}
+\begin{align*}
+S(Sunny,Wind) &= S_{sunny} - S_{sunny,strong} - S_{sunny,weak}\\
+	      &= 0.97 - \frac251 - \frac35\left(-\frac13\log_2{\frac13} - \frac23\log_2{\frac23}\right)\\
+	      &= 0.019
+\end{align*}
+
+From here we can see that the best thing to split on is humidity and the worst 
+is wind. That gives us the following update to our tree.
+
+\begin{tikzpicture}[grow=down,level distance=3cm]
+\Tree [.{Outlook\\$\big[+9,-6\big]$} [.{Sunny\\$\big[+2,-3\big]$} [.{Humidity\\$\big[+2,-3\big]$} ] ] [.{Overcast\\$\big[+4,-0\big]$} ] [.{Rain\\$\big[+3,-2\big]$} ] ]
+\end{tikzpicture}
 
 \ppart{c}
+Continuing with this process we get the following tree
+
+\begin{tikzpicture}[grow=down,level distance=3cm]
+\Tree [.{Outlook\\$\big[+9,-6\big]$}
+	[.{Sunny\\$\big[+2,-3\big]$}
+	  [.{Humidity\\$\big[+2,-3\big]$} {High\\Yes} {Low\\No} ] 
+        ]
+	[.{Overcast\\$\big[+4,-0\big]$} Yes ]
+	[.{Rain\\$\big[+3,-2\big]$}
+	  [.{Wind\\$\big[+3,-2\big]$} {Strong\\No} {Weak\\Yes} ]
+	]
+      ]
+\end{tikzpicture}
+
+\problem{3}
+Suppose a bank makes
 
 
 
