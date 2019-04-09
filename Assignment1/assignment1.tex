@@ -46,43 +46,48 @@ Answer Exercise 3.1 from
 
 \ppart{a} 
 $$ A \wedge\neg B$$
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}
 %\Tree [.A [.T [.B [.T 0 ] [.F 1 ] ] ] [.F 0 ] ]
 \Tree [.A [.T [.B [.T 0 ] [.F 1 ] ] ] [.F 0 ] ]
 \end{tikzpicture}
+\caption{$A\wedge\neg B$}
 \end{figure}
 
 
 \ppart{b}
 $$A\vee (B\wedge C)$$
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}
 \Tree [.A [.T 1 ] [.F [.B [.T [.C [.T 1 ] [.F 0 ] ] ] [.F 0 ] ] ] ]
 \end{tikzpicture}
+\caption{$A\vee(B\wedge C)$}
 \end{figure}
 
 
 \ppart{c}
 $$ A\ \mathsf{XOR}\ B $$
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}
 \Tree [.A [.T [.B [.T 0 ] [.F 1 ] ] ] [.F [.B [.T 1 ] [.F 0 ] ] ] ]
 \end{tikzpicture}
+\caption{$A\ \mathsf{XOR}\ B$}
 \end{figure}
 
 \ppart{d}
 $$ (A\wedge B)\vee(C\wedge D)$$
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}
 \Tree [.A [.T [.B [.T 1 ] [.F 0 ] ] ] [.F [.C [.T [.D [.T 1 ] [.F 0 ] ] ] [.F 0 ] ] ] ]
 \end{tikzpicture}
+\caption{$(A\wedge B)\vee(C\wedge D)$}
 \end{figure}
 
+\FloatBarrier
 \problem{2}
 Consider the samples in the Play-tennis dataset from Table $3.2$ in Mitchell's
 textbook. If you calculate the information-gain for all of the attributes of this
@@ -99,18 +104,21 @@ list the sample IDs that will be assigned to each branch.
 and determine which attribute will be chosen as the root of the sub-tree in
 each branch.
 
+\FloatBarrier
 \ppart{a}
 Now that we know that Overcast has the highest information gain, of $0.246$, we
 will use it as the root node. We will then create the next nodes and show their
 corresponding values for playing tennis or not, in the form of $\big[+yes,-no\big]$
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}[grow=down,level distance=3cm]
 \Tree [.{Outlook\\$\big[+9,-6\big]$} [.{Sunny\\$\big[+2,-3\big]$} ] [.{Overcast\\$\big[+4,-0\big]$} ] [.{Rain\\$\big[+3,-2\big]$} ] ]
 \end{tikzpicture}
+\caption{Labels of new tree branches below root}
 \end{figure}
 
+\FloatBarrier
 \ppart{b}
 To determine how we will partition the data we will look at the entropy of each
 node.
@@ -145,17 +153,19 @@ S(Sunny,Wind) &= S_{sunny} - S_{sunny,strong} - S_{sunny,weak}\\
 From here we can see that the best thing to split on is humidity and the worst 
 is wind. That gives us the following update to our tree.
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}[grow=down,level distance=3cm]
 \Tree [.{Outlook\\$\big[+9,-6\big]$} [.{Sunny\\$\big[+2,-3\big]$} [.{Humidity\\$\big[+2,-3\big]$} ] ] [.{Overcast\\$\big[+4,-0\big]$} ] [.{Rain\\$\big[+3,-2\big]$} ] ]
 \end{tikzpicture}
+\caption{Partition of data}
 \end{figure}
 
+\FloatBarrier
 \ppart{c}
 Continuing with this process we get the following tree
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}[grow=down,level distance=3cm]
 \Tree [.{Outlook\\$\big[+9,-6\big]$}
@@ -168,8 +178,10 @@ Continuing with this process we get the following tree
 	]
       ]
 \end{tikzpicture}
+\caption{Full tree}
 \end{figure}
 
+\FloatBarrier
 \problem{3}
 Suppose a bank makes loan decisions using two decision trees, one that uses
 attributes related to credit history and one that uses other demographic 
@@ -221,7 +233,41 @@ is shown below in Figure \ref{fig:example} and Figure \ref{fig:combined}.
 \end{figure}
 
 \ppart{2}
+The best way to do this is to draw a bunch of graphs and test different. I won't
+draw there here because it takes a lot in \LaTeX. But testing we can easily see
+that $n_1n_2$ is a tight upper bound. I will draw our worst case tree to 
+demonstrate, seen in Figure \ref{fig:worst}. Note that our best case would be 
+all leaves being ``High Risk" (which results in a bound of $n_1$, but that's 
+boring).
+\begin{figure}[h]
+\centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \begin{tikzpicture}[grow=down,level distance=3cm]
+             \hspace{2cm}\Tree [.{C1} L L ]
+        \end{tikzpicture}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \begin{tikzpicture}[grow=down,level distance=3cm]
+            \hspace{2cm}\Tree [.{D1} L L ]
+        \end{tikzpicture}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+	\begin{tikzpicture}[grow=down,level distance=3cm]
+	\hspace{6cm}\Tree [.{C1} [.D1 L L ] [.D1 L L ] ]
+	\end{tikzpicture}
+    \end{subfigure}
+    \caption{Worst case of tree additions}
+    \label{fig:worst}
+\end{figure}
+We can reason this is the worst because every instance of ``Low Risk" generates
+an instance of Tree$_2$, which has $n_2$ leaves. Thus we have the tightest bounds.
 
+\ppart{fun observation}
+Playing around with trees I found a tighter bound if we have stricter definitions
+of a decision tree. If every node has either ``High Risk" or another node then 
+we can actually create a tighter bound of $\frac12n_1 + \frac12n_1n_2$. But with
+our less strict definition of a decision tree we can trivially show that this 
+will not provide an upper bound to our worst case example.
 
 
 \end{document}
