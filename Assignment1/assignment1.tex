@@ -120,6 +120,24 @@ corresponding values for playing tennis or not, in the form of $\big[+yes,-no\bi
 
 \FloatBarrier
 \ppart{b}
+We'll redraw the same tree but now include what days we partition.
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[grow=down,level distance=3cm]
+        \Tree [.{Outlook\\$\big[+9,-6\big]$} 
+                [.{Sunny\\$\big[+2,-3\big]$\\\{D1,D2,D8,D9,D11\}} ] 
+                [.{Overcast\\$\big[+4,-0\big]$\\\{D3,D7,D12,D13\}} ] 
+                [.{Rain\\$\big[+3,-2\big]$\\\{D4,D5,D6,D10,D14\}} ] 
+                ]
+    \end{tikzpicture}
+    \caption{Label of tree with purity and associated days (D)}
+\end{figure}
+\\
+Note that Overcast is pure, so we are actually done with that decision process.
+
+
+\FloatBarrier
+\ppart{c}
 To determine how we will partition the data we will look at the entropy of each
 node.
 
@@ -151,7 +169,8 @@ S(Sunny,Wind) &= S_{sunny} - S_{sunny,strong} - S_{sunny,weak}\\
 \end{align*}
 
 From here we can see that the best thing to split on is humidity and the worst 
-is wind. That gives us the following update to our tree.
+is wind. We're actually done on $Sunny$ because we always make a decision to play
+tennis or not given our current decision process. This results in the following
 
 \begin{figure}[h]
 \centering
@@ -161,9 +180,31 @@ is wind. That gives us the following update to our tree.
 \caption{Partition of data}
 \end{figure}
 
-\FloatBarrier
-\ppart{c}
-Continuing with this process we get the following tree
+
+We now need to do the same thing with Rain. We can skip overcast because it is
+pure. Our only decisions left are ``Wind" and ``Temperature". We don't actually
+need to know $S_{Rain}$ because we can just figure out which term is the smallest
+given Rain.
+
+\begin{align*}
+S(Rain,Wind) &= S_{Rain} - S_{Rain,strong} - S_{Rain,weak}\\
+              &= S_{Rain} - 0 - 0\\
+              &= S_{Rain}
+\end{align*}
+This is because we have pure outcomes ($S_{Rain,Strong} = \big[+0,-2\big]$, 
+$S_{Rain,Weak} = \big[+3,-0\big]$)
+We should actually know here that $Wind$ is the variable that we want, but we'll
+do $Temperature$ just to check that it isn't equally as good. We know it isn't 
+because $S_{Rain,Hot} = \big[+0,-0\big]$, $S_{Rain,Mild} = \big[+2,-1\big]$, and
+$S_{Rain,Cold} = \big[+1,-1\big]$, but we'll do it anyway.
+\begin{align*}
+    S(Rain,Temperature) &= S_{Rain} - S_{Rain,Hot} - S_{Rain,Mild} - S_{Rain,Cold}\\
+              &= S_{Rain} - 0 - \frac35(-\frac23\log_2(\frac23) - \frac13\log_2(\frac13)) - \frac25 \\
+              &= S_{Rain} - 0.551 - \frac25 \\
+              &= S_{Rain} - 0.151
+\end{align*}
+It is trivial to see that $S_{Rain} > S_{Rain} - 0.151$, so we pick $Wind$. 
+We can now complete our tree.
 
 \begin{figure}[h]
 \centering
@@ -180,6 +221,9 @@ Continuing with this process we get the following tree
 \end{tikzpicture}
 \caption{Full tree}
 \end{figure}
+
+We can throw out $Temperature$ because our current decision tree always results
+in an outcome of playing tennis or not.
 
 \FloatBarrier
 \problem{3}
