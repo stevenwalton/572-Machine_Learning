@@ -10,6 +10,9 @@ import re
 # Node class for the decision tree
 import node
 
+# Needed for math
+import numpy as np
+
 
 train=None
 varnames=None
@@ -19,10 +22,20 @@ root=None
 
 # Helper function computes entropy of Bernoulli distribution with
 # parameter p
-def entropy(p):
-	# >>>> YOUR CODE GOES HERE <<<<
-    # For now, always return "0":
-	return 0;
+def entropy(p): # -> float
+    r"""
+    Calculates the entropy given to it.
+    p: parameter \in [0,1]
+    Formula:
+       -p*np.log2(p) - (1.-p)*np.log2(1.-p)
+    """
+    assert(p >= 0 and p <= 1),"Input needs to be between 0 and 1"
+    # Check for nans
+    if (p == 0) or (p == 1):
+        return 0
+    e = ((-p*np.log2(p)) - ((1.-p)*(np.log2(1.-p))))
+    assert(e >= 0 and e <= 1),"Entropy is bounded on [0,1]"
+    return e
 
 
 # Compute information gain for a particular split, given the counts
@@ -31,9 +44,40 @@ def entropy(p):
 # py : number of ocurrences of y=1
 # total : total length of the data
 def infogain(py_pxi, pxi, py, total):
-	# >>>> YOUR CODE GOES HERE <<<<
+    r"""
+    Returns the information gain of a particular step
+    py_pxi: array containing the number of occurrences of y=1 w/ x_i=1 forall i=1,...,n
+    pxi   : array containing the number of occurrences of x_i = 1
+    py    : number of occurrences of y=1
+    total : total length of data
+    eg:
+            [+9,-5]
+            Humidity
+           /        \
+        [+3,-4]   [+6,-1]
+         High       Low
+        py_pxi =
+        pxi    =
+        py     =
+        total  =
+        Information Gain = 
+            (-9/14 log2(9/14) - 5/14 log2(5/14) )
+             - 7/14( -3/7 log2(3/7) - 4/7 log2(4/7) )
+             - 7/14( -6/7 log2(6/7) - 1/7 log2(1/7) )
+
+        py_pxi = [3,6]
+        pxi    = [7,7]
+        py     = 9
+        total  = 14
+    """
+    S = entropy(float(py)/float(total))
+    assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
+    denom = float(np.sum(pxi))
+    for i in len(pxi):
+        S -= pxi[i]/denom * entropy(float(py_pxi)/float(pxi[i]))
+    return S
+    # >>>> YOUR CODE GOES HERE <<<<
     # For now, always return "0":
-	return 0;
 
 # OTHER SUGGESTED HELPER FUNCTIONS:
 # - collect counts for each variable value with each class label
@@ -51,7 +95,7 @@ def read_data(filename):
     varnames = p.split(header)
     namehash = {}
     for l in f:
-		data.append([int(x) for x in p.split(l.strip())])
+        data.append([int(x) for x in p.split(l.strip())])
     return (data, varnames)
 
 # Saves the model to a file.  Most of the work here is done in the
@@ -63,6 +107,9 @@ def print_model(root, modelfile):
 # Build tree in a top-down manner, selecting splits until we hit a
 # pure leaf or all splits look bad.
 def build_tree(data, varnames):
+    r"""
+    Function used to build tree in a top down manner. 
+    """
     # >>>> YOUR CODE GOES HERE <<<<
     # For now, always return a leaf predicting "1":
     return node.Leaf(varnames, 1)
@@ -73,40 +120,40 @@ def build_tree(data, varnames):
 # Each example is a list of attribute values, where the last element in
 # the list is the class value.
 def loadAndTrain(trainS,testS,modelS):
-	global train
-	global varnames
-	global test
-	global testvarnames
-	global root
-	(train, varnames) = read_data(trainS)
-	(test, testvarnames) = read_data(testS)
-	modelfile = modelS
+    global train
+    global varnames
+    global test
+    global testvarnames
+    global root
+    (train, varnames) = read_data(trainS)
+    (test, testvarnames) = read_data(testS)
+    modelfile = modelS
 
-	# build_tree is the main function you'll have to implement, along with
+    # build_tree is the main function you'll have to implement, along with
     # any helper functions needed.  It should return the root node of the
     # decision tree.
-	root = build_tree(train, varnames)
-	print_model(root, modelfile)
+    root = build_tree(train, varnames)
+    print_model(root, modelfile)
 
 def runTest():
-	correct = 0
-	# The position of the class label is the last element in the list.
-	yi = len(test[0]) - 1
-	for x in test:
-		# Classification is done recursively by the node class.
+    correct = 0
+    # The position of the class label is the last element in the list.
+    yi = len(test[0]) - 1
+    for x in test:
+        # Classification is done recursively by the node class.
         # This should work as-is.
-		pred = root.classify(x)
-		if pred == x[yi]:
-			correct += 1
-	acc = float(correct)/len(test)
-	return acc
+        pred = root.classify(x)
+        if pred == x[yi]:
+            correct += 1
+    acc = float(correct)/len(test)
+    return acc
 
 
 # Load train and test data.  Learn model.  Report accuracy.
 def main(argv):
     if (len(argv) != 3):
-		print 'Usage: id3.py <train> <test> <model>'
-		sys.exit(2)
+        print 'Usage: id3.py <train> <test> <model>'
+        sys.exit(2)
     loadAndTrain(argv[0],argv[1],argv[2])
 
     acc = runTest()
