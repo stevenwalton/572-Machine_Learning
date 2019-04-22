@@ -20,8 +20,6 @@ test=None
 testvarnames=None
 root=None
 
-# Helper function computes entropy of Bernoulli distribution with
-# parameter p
 def entropy(p): # -> float
     r"""
     Calculates the entropy given to it.
@@ -39,12 +37,6 @@ def entropy(p): # -> float
     assert(e >= 0 and e <= 1),"Entropy is bounded on [0,1]"
     return e
 
-
-# Compute information gain for a particular split, given the counts
-# py_pxi : number of occurences of y=1 with x_i=1 for all i=1 to n
-# pxi : number of occurrences of x_i=1
-# py : number of ocurrences of y=1
-# total : total length of the data
 def infogain(py_pxi, pxi, py, total):
     r"""
     Returns the information gain of a particular step
@@ -76,12 +68,7 @@ def infogain(py_pxi, pxi, py, total):
     S = entropy(frac)
     assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
     denom = float(np.sum(pxi))
-    #print("pxi:",pxi)
-    #print("len:",len(pxi))
     for i in range(len(pxi)):
-        #print("py_pxi[",i,"] =",py_pxi[i])
-        #print("pxi[",i,"] =",pxi[i])
-        #print(float(py_pxi[i])/float(pxi[i]))
         S -= pxi[i]/denom * entropy(float(py_pxi[i])/float(pxi[i]))
     return S
 
@@ -106,7 +93,8 @@ def counts(data, used, constraint=None):
                     c[col][0] += 1
                     if data[row][-1] == 1:
                         c[col][1] += 1
-    #print(c)
+    print(c)
+    raw_input("Pause")
     return c
 
 def highest_info_gain(S,c):
@@ -125,37 +113,29 @@ def highest_info_gain(S,c):
     for i in range(len(varnames)):
         if varnames[i] == var:
             used[i] = 1
-    print varnames[var]
     return var
-    #return 0
 
 #def determine_next_node(counts,data,used):
 def determine_next_node(data,given=[]):
     r"""
     returns the variable with the highest entropy
+    We can actually cheat a bit. Since the formula is S - sum S_x
+    we can actually look for the smallest entropy given a condition
+    We do the inverse of highest_info_gain
     """
     c = counts(data,used,given)
-    print c
-    return 0
-    #var = -1 
-    #running_entropy = 0
-    #current_entropy = 0
-    #for i in range(len(counts)):
-    #    if used[i] == 0:
-    #        e = float(counts[i][1])/float(counts[i][0])
-    #        current_entropy = entropy(e)
-    #        if current_entropy > running_entropy:
-    #            running_entropy = current_entropy
-    #            var = i
-    #    else:
-    #        current_entropy = 0
-    #assert(var != -1)
-    #assert(running_entropy != 0),"Highest entropy is 0"
-    #print("Highest entropy on var: ",var)
-    #h = highest_info_gain(counts,var,data,used)
-    #print("Highest info gain from: ",h)
-    ##print("\n")
-    #return var
+    lowest_entropy = 1 # Because this is max
+    for i in range(len(c)):
+        current_entropy = entropy(float(c[i,1])/float(c[i,0]))
+        if current_entropy < lowest_entropy:
+            lowest_entropy = current_entropy
+            var = i
+    for i in range(len(varnames)-1):
+        if varnames[i] == var:
+            used[i] = 1
+    print varnames[i]
+    return var
+    #return 0
 
 def root_node(data, varnames):
     r"""
@@ -170,27 +150,7 @@ def root_node(data, varnames):
     S = entropy(float(yes)/float(rows))
     c = counts(data, used)
     var = highest_info_gain(S,c)
-    #highest_entropy = 0
-    ##var = "" 
-    #for i in range(len(c)):
-    #    #print("Frac:" + str(c[i,1]) + "/" + str(c[i,0]) + "=" +str(c[i,1]/c[i,0]))
-    #    current_entropy = S - entropy(c[i,1]/c[i,0])
-    #    #print("Current entropy: " + str(current_entropy))
-    #    if current_entropy > highest_entropy:
-    #        highest_entropy = current_entropy
-    #        var = i
-    #        #print var
-
-    #for i in range(len(varnames)):
-    #    if varnames[i] == var:
-    #        used[i] = 1
-
-    #print "[+" + str(yes) + ",-" + str(rows-yes) +"]"
-    #print "Total: " + str(rows)
-    #print "Len data:" + str(len(data))
-    #print "Num vars:" + str(len(data[0])) + " " + str(len(varnames))
-    #print "Total entropy: " + str(total_entropy)
-    #raw_input("Pause")
+    print(varnames[var])
     return var
 
         
@@ -230,22 +190,7 @@ def build_tree(data, varnames):
     rn = root_node(data,varnames)
     root_name = varnames[rn]
     left = determine_next_node(data,rn)
-    #print(rn)
-    # >>>> YOUR CODE GOES HERE <<<<
-    # For now, always return a leaf predicting "1":
-    #used = np.zeros(len(varnames)-1)
-    #used[4] = 1
-    #cnt = counts(data, used, 4)
-    #cnt = counts(data, used)
-    #root_node = determine_next_node(cnt, data, used)
-    #node.Leaf(varnames, root_node)
-    #used[root_node] = 1
-    #print cnt
-    #for i in range(len(varnames)-1):
-    #    #if used[4] == 1: print "4 is used"
-    #    #else: print "4 is not used"
-    #    next_node = determine_next_node(cnt,used)
-    #    used[next_node] = 1
+    right= determine_next_node(data,rn)
     return node.Leaf(varnames, 1)
     #return node.Leaf(varnames, root_node)
 
