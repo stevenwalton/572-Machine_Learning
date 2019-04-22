@@ -109,60 +109,90 @@ def counts(data, used, constraint=None):
     #print(c)
     return c
 
-def highest_info_gain(c, var, data, used):
+def highest_info_gain(S,c):
     r"""
-    returns the variable with the highest info gain and thus tells us how we 
-    should split our tree
-    constraints is an array of all the running constraints
+    Pass in a entropy and counts list and get returned the variable with the highest info 
+    gain
+    S = entropy
+    c = counts list
     """
-    splitting_on = c[var]
-    max_info = 0
-    for i in range(len(data[0])-1):
-        if used[i] == 1:
-            pass
-        else:
-            c = counts(data,used,4)
-            #print("py_pxi:",c[:,1])
-            #print("pxi:",c[:,0])
-            #print("py",splitting_on[1])
-            #print("total",splitting_on[0])
-            #print("c",c)
-            #print("Splitting on",splitting_on)
-            #raw_input("Pause")
-            info = infogain(c[:,1],c[:,0],splitting_on[1],splitting_on[0])
-            if info > max_info:
-                max_info = info
-                print i
-            print("Info: on var",i,info)
-    print c
-    print("Max info",max_info)
-    raw_input("")
+    highest_entropy = 0 
+    for i in range(len(c)):
+        current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+        if current_entropy > highest_entropy:
+            highest_entropy = current_entropy
+            var = i
+    for i in range(len(varnames)):
+        if varnames[i] == var:
+            used[i] = 1
+    print varnames[var]
+    return var
+    #return 0
 
-
-
-def determine_next_node(counts,data,used):
+#def determine_next_node(counts,data,used):
+def determine_next_node(data,given=[]):
     r"""
     returns the variable with the highest entropy
     """
-    var = -1 
-    running_entropy = 0
-    current_entropy = 0
-    for i in range(len(counts)):
-        if used[i] == 0:
-            e = float(counts[i][1])/float(counts[i][0])
-            current_entropy = entropy(e)
-            if current_entropy > running_entropy:
-                running_entropy = current_entropy
-                var = i
-        else:
-            current_entropy = 0
-    assert(var != -1)
-    assert(running_entropy != 0),"Highest entropy is 0"
-    print("Highest entropy on var: ",var)
-    h = highest_info_gain(counts,var,data,used)
-    print("Highest info gain from: ",h)
-    #print("\n")
+    c = counts(data,used,given)
+    print c
+    return 0
+    #var = -1 
+    #running_entropy = 0
+    #current_entropy = 0
+    #for i in range(len(counts)):
+    #    if used[i] == 0:
+    #        e = float(counts[i][1])/float(counts[i][0])
+    #        current_entropy = entropy(e)
+    #        if current_entropy > running_entropy:
+    #            running_entropy = current_entropy
+    #            var = i
+    #    else:
+    #        current_entropy = 0
+    #assert(var != -1)
+    #assert(running_entropy != 0),"Highest entropy is 0"
+    #print("Highest entropy on var: ",var)
+    #h = highest_info_gain(counts,var,data,used)
+    #print("Highest info gain from: ",h)
+    ##print("\n")
+    #return var
+
+def root_node(data, varnames):
+    r"""
+    Returns the variable for the root node
+    """
+    rows = 0
+    yes  = 0
+    for row in range(len(data)):
+        if data[row][-1] == 1:
+            yes += 1
+        rows += 1
+    S = entropy(float(yes)/float(rows))
+    c = counts(data, used)
+    var = highest_info_gain(S,c)
+    #highest_entropy = 0
+    ##var = "" 
+    #for i in range(len(c)):
+    #    #print("Frac:" + str(c[i,1]) + "/" + str(c[i,0]) + "=" +str(c[i,1]/c[i,0]))
+    #    current_entropy = S - entropy(c[i,1]/c[i,0])
+    #    #print("Current entropy: " + str(current_entropy))
+    #    if current_entropy > highest_entropy:
+    #        highest_entropy = current_entropy
+    #        var = i
+    #        #print var
+
+    #for i in range(len(varnames)):
+    #    if varnames[i] == var:
+    #        used[i] = 1
+
+    #print "[+" + str(yes) + ",-" + str(rows-yes) +"]"
+    #print "Total: " + str(rows)
+    #print "Len data:" + str(len(data))
+    #print "Num vars:" + str(len(data[0])) + " " + str(len(varnames))
+    #print "Total entropy: " + str(total_entropy)
+    #raw_input("Pause")
     return var
+
         
 # OTHER SUGGESTED HELPER FUNCTIONS:
 # - collect counts for each variable value with each class label
@@ -197,15 +227,19 @@ def build_tree(data, varnames):
     data: array of arrays containing the data [[row1],[row2],...,[rown]]
     varnames: array with variable names [header info]
     """
+    rn = root_node(data,varnames)
+    root_name = varnames[rn]
+    left = determine_next_node(data,rn)
+    #print(rn)
     # >>>> YOUR CODE GOES HERE <<<<
     # For now, always return a leaf predicting "1":
     #used = np.zeros(len(varnames)-1)
     #used[4] = 1
     #cnt = counts(data, used, 4)
-    cnt = counts(data, used)
-    root_node = determine_next_node(cnt, data, used)
-    node.Leaf(varnames, root_node)
-    used[root_node] = 1
+    #cnt = counts(data, used)
+    #root_node = determine_next_node(cnt, data, used)
+    #node.Leaf(varnames, root_node)
+    #used[root_node] = 1
     #print cnt
     #for i in range(len(varnames)-1):
     #    #if used[4] == 1: print "4 is used"
