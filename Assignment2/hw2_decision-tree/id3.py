@@ -29,6 +29,8 @@ def entropy(p): # -> float
     Formula:
        -p*np.log2(p) - (1.-p)*np.log2(1.-p)
     """
+    if (p < 0 or p > 1):
+        print(p)
     assert(p >= 0 and p <= 1),"Input needs to be between 0 and 1"
     # Check for nans
     if (p == 0) or (p == 1):
@@ -56,10 +58,6 @@ def infogain(py_pxi, pxi, py, total):
            /        \
         [+3,-4]   [+6,-1]
          High       Low
-        py_pxi =
-        pxi    =
-        py     =
-        total  =
         Information Gain = 
             (-9/14 log2(9/14) - 5/14 log2(5/14) )
              - 7/14( -3/7 log2(3/7) - 4/7 log2(4/7) )
@@ -70,15 +68,102 @@ def infogain(py_pxi, pxi, py, total):
         py     = 9
         total  = 14
     """
-    S = entropy(float(py)/float(total))
+    frac = float(py)/float(total)
+    if (frac > 1 or frac < 0):
+        print frac
+        print(py)
+        print(total)
+    S = entropy(frac)
     assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
     denom = float(np.sum(pxi))
-    for i in len(pxi):
-        S -= pxi[i]/denom * entropy(float(py_pxi)/float(pxi[i]))
+    #print("pxi:",pxi)
+    #print("len:",len(pxi))
+    for i in range(len(pxi)):
+        #print("py_pxi[",i,"] =",py_pxi[i])
+        #print("pxi[",i,"] =",pxi[i])
+        #print(float(py_pxi[i])/float(pxi[i]))
+        S -= pxi[i]/denom * entropy(float(py_pxi[i])/float(pxi[i]))
     return S
-    # >>>> YOUR CODE GOES HERE <<<<
-    # For now, always return "0":
 
+def counts(data, used, constraint=None):
+    r"""
+    Pass in the data and get returned the number of instances and how
+    many times class == 1
+    c holds the counts and is an array of arrays. [[# of 1's, # class == 1],...]
+    """
+    c = np.zeros([len(data[0])-1, 2]) # rows, columns
+    if constraint == None: # unconstrained
+        for row in range(len(data)):
+            for col in range(len(data[0])-1):
+                if used[col] == 0 and data[row][col] == 1:
+                    c[col][0] += 1
+                    if data[row][-1] == 1:
+                        c[col][1] += 1
+    else: # Constrained (for info gain)
+        for row in range(len(data)):
+            for col in range(len(data[0])-1):
+                if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
+                    c[col][0] += 1
+                    if data[row][-1] == 1:
+                        c[col][1] += 1
+    #print(c)
+    return c
+
+def highest_info_gain(c, var, data, used):
+    r"""
+    returns the variable with the highest info gain and thus tells us how we 
+    should split our tree
+    constraints is an array of all the running constraints
+    """
+    splitting_on = c[var]
+    max_info = 0
+    for i in range(len(data[0])-1):
+        if used[i] == 1:
+            pass
+        else:
+            c = counts(data,used,4)
+            #print("py_pxi:",c[:,1])
+            #print("pxi:",c[:,0])
+            #print("py",splitting_on[1])
+            #print("total",splitting_on[0])
+            #print("c",c)
+            #print("Splitting on",splitting_on)
+            #raw_input("Pause")
+            info = infogain(c[:,1],c[:,0],splitting_on[1],splitting_on[0])
+            if info > max_info:
+                max_info = info
+                print i
+            print("Info: on var",i,info)
+    print c
+    print("Max info",max_info)
+    raw_input("")
+
+
+
+def determine_next_node(counts,data,used):
+    r"""
+    returns the variable with the highest entropy
+    """
+    var = -1 
+    running_entropy = 0
+    current_entropy = 0
+    for i in range(len(counts)):
+        if used[i] == 0:
+            e = float(counts[i][1])/float(counts[i][0])
+            current_entropy = entropy(e)
+            if current_entropy > running_entropy:
+                running_entropy = current_entropy
+                var = i
+        else:
+            current_entropy = 0
+    assert(var != -1)
+    assert(running_entropy != 0),"Highest entropy is 0"
+    print("Highest entropy on var: ",var)
+    h = highest_info_gain(counts,var,data,used)
+    print("Highest info gain from: ",h)
+    #print("\n")
+    return var
+        
 # OTHER SUGGESTED HELPER FUNCTIONS:
 # - collect counts for each variable value with each class label
 # - find the best variable to split on, according to mutual information
@@ -109,10 +194,26 @@ def print_model(root, modelfile):
 def build_tree(data, varnames):
     r"""
     Function used to build tree in a top down manner. 
+    data: array of arrays containing the data [[row1],[row2],...,[rown]]
+    varnames: array with variable names [header info]
     """
     # >>>> YOUR CODE GOES HERE <<<<
     # For now, always return a leaf predicting "1":
+    #used = np.zeros(len(varnames)-1)
+    #used[4] = 1
+    #cnt = counts(data, used, 4)
+    cnt = counts(data, used)
+    root_node = determine_next_node(cnt, data, used)
+    node.Leaf(varnames, root_node)
+    used[root_node] = 1
+    #print cnt
+    #for i in range(len(varnames)-1):
+    #    #if used[4] == 1: print "4 is used"
+    #    #else: print "4 is not used"
+    #    next_node = determine_next_node(cnt,used)
+    #    used[next_node] = 1
     return node.Leaf(varnames, 1)
+    #return node.Leaf(varnames, root_node)
 
 
 # "varnames" is a list of names, one for each variable
@@ -125,15 +226,19 @@ def loadAndTrain(trainS,testS,modelS):
     global test
     global testvarnames
     global root
+    global used 
     (train, varnames) = read_data(trainS)
     (test, testvarnames) = read_data(testS)
     modelfile = modelS
+    used = np.zeros(len(varnames)-1)
 
     # build_tree is the main function you'll have to implement, along with
     # any helper functions needed.  It should return the root node of the
     # decision tree.
     root = build_tree(train, varnames)
     print_model(root, modelfile)
+    print("Current tree:")
+    root.write(sys.stdout,0)
 
 def runTest():
     correct = 0
