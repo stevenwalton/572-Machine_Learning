@@ -76,25 +76,25 @@ def counts(data, used, constraint=None):
     r"""
     Pass in the data and get returned the number of instances and how
     many times class == 1
-    c holds the counts and is an array of arrays. [[# of 1's, # class == 1],...]
+    returns array [[+x,total]]
     """
     c = np.zeros([len(data[0])-1, 2]) # rows, columns
     if constraint == None: # unconstrained
         for row in range(len(data)):
             for col in range(len(data[0])-1):
                 if used[col] == 0 and data[row][col] == 1:
-                    c[col][0] += 1
+                    c[col][1] += 1
                     if data[row][-1] == 1:
-                        c[col][1] += 1
+                        c[col][0] += 1
     else: # Constrained (for info gain)
         for row in range(len(data)):
             for col in range(len(data[0])-1):
                 if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
-                    c[col][0] += 1
+                    c[col][1] += 1
                     if data[row][-1] == 1:
-                        c[col][1] += 1
-    print(c)
-    raw_input("Pause")
+                        c[col][0] += 1
+    #print(c)
+    #raw_input("Pause")
     return c
 
 def highest_info_gain(S,c):
@@ -106,7 +106,8 @@ def highest_info_gain(S,c):
     """
     highest_entropy = 0 
     for i in range(len(c)):
-        current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
         if current_entropy > highest_entropy:
             highest_entropy = current_entropy
             var = i
@@ -126,7 +127,8 @@ def determine_next_node(data,given=[]):
     c = counts(data,used,given)
     lowest_entropy = 1 # Because this is max
     for i in range(len(c)):
-        current_entropy = entropy(float(c[i,1])/float(c[i,0]))
+        #current_entropy = entropy(float(c[i,1])/float(c[i,0]))
+        current_entropy = entropy(float(c[i,0])/float(c[i,1]))
         if current_entropy < lowest_entropy:
             lowest_entropy = current_entropy
             var = i
