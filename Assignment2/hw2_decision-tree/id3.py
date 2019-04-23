@@ -119,90 +119,90 @@ def counts(data, used, constraint=None):
     returns array [[+x,total]]
     """
     c = np.zeros([len(data[0])-1, 2]) # rows, columns
-    if constraint == None: # unconstrained
-        for row in range(len(data)):
-            for col in range(len(data[0])-1):
-                if used[col] == 0 and data[row][col] == 1:
-                    c[col][1] += 1
-                    if data[row][-1] == 1:
-                        c[col][0] += 1
-    else: # Constrained (for info gain)
-        for row in range(len(data)):
-            for col in range(len(data[0])-1):
-                if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
-                    c[col][1] += 1
-                    if data[row][-1] == 1:
-                        c[col][0] += 1
+    for row in range(len(data)):
+        for col in range(len(data[0])-1):
+            if used[col] == 0 and data[row][col] == 1:
+                c[col][1] += 1
+                if data[row][-1] == 1:
+                    c[col][0] += 1
+    return c
+    #else: # Constrained (for info gain)
+    #    for row in range(len(data)):
+    #        for col in range(len(data[0])-1):
+    #            if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
+    #                c[col][1] += 1
+    #                if data[row][-1] == 1:
+    #                    c[col][0] += 1
     #print(c)
     #raw_input("Pause")
-    return c
+    #return c
 
-def highest_info_gain(S,c):
-    r"""
-    Pass in a entropy and counts list and get returned the variable with the highest info 
-    gain
-    S = entropy
-    c = counts list
-    """
-    highest_entropy = 0 
-    for i in range(len(c)):
-        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
-        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
-        if current_entropy > highest_entropy:
-            highest_entropy = current_entropy
-            var = i
-    for i in range(len(varnames)):
-        if varnames[i] == var:
-            used[i] = 1
-    return var
+#def highest_info_gain(S,c):
+#    r"""
+#    Pass in a entropy and counts list and get returned the variable with the highest info 
+#    gain
+#    S = entropy
+#    c = counts list
+#    """
+#    highest_entropy = 0 
+#    for i in range(len(c)):
+#        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+#        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
+#        if current_entropy > highest_entropy:
+#            highest_entropy = current_entropy
+#            var = i
+#    for i in range(len(varnames)):
+#        if varnames[i] == var:
+#            used[i] = 1
+#    return var
 
 #def determine_next_node(counts,data,used):
-def determine_next_node(data,given=[]):
-    r"""
-    returns the variable with the highest entropy
-    We can actually cheat a bit. Since the formula is S - sum S_x
-    we can actually look for the smallest entropy given a condition
-    We do the inverse of highest_info_gain
-    """
-    c = counts(data,used,given)
-    lowest_entropy = 1 # Because this is max
-    for i in range(len(c)):
-        #current_entropy = entropy(float(c[i,1])/float(c[i,0]))
-        current_entropy = entropy(float(c[i,0])/float(c[i,1]))
-        if current_entropy < lowest_entropy:
-            lowest_entropy = current_entropy
-            var = i
-    for i in range(len(varnames)-1):
-        if varnames[i] == var:
-            used[i] = 1
-    #print varnames[i]
-    return var
-    #return 0
+#def determine_next_node(data,given=[]):
+#    r"""
+#    returns the variable with the highest entropy
+#    We can actually cheat a bit. Since the formula is S - sum S_x
+#    we can actually look for the smallest entropy given a condition
+#    We do the inverse of highest_info_gain
+#    """
+#    c = counts(data,used,given)
+#    lowest_entropy = 1 # Because this is max
+#    for i in range(len(c)):
+#        #current_entropy = entropy(float(c[i,1])/float(c[i,0]))
+#        current_entropy = entropy(float(c[i,0])/float(c[i,1]))
+#        if current_entropy < lowest_entropy:
+#            lowest_entropy = current_entropy
+#            var = i
+#    for i in range(len(varnames)-1):
+#        if varnames[i] == var:
+#            used[i] = 1
+#    #print varnames[i]
+#    return var
+#    #return 0
 
-def next_node(c,data,given):
-    r"""
-    Take in the previous counts, all data, and the given variable
-    Calculate the entropy for the each variable given the previous 
-    condition and then return the variable with the highest information gain.
-    """
-    cnt = c[given]
-    py     = cnt[0]
-    total  = cnt[1]
-
-    cnt = counts(data,used,given)
-    #print(cnt)
-    py_pxi = cnt[:,0]
-    pxi    = cnt[:,1]
-    S = np.zeros(len(data[0]))
-    for i in range(len(data[0])-1):
-        S[i] = infogain(py_pxi[i], pxi[i], py, total)
-    #print S
-    #print(np.max(S))
-    for i in range(len(S)):
-        if S[i] == np.max(S):
-            #print i
-            return i
-    return 0
+#def next_node(c,data,given):
+#    r"""
+#    Take in the previous counts, all data, and the given variable
+#    Calculate the entropy for the each variable given the previous 
+#    condition and then return the variable with the highest information gain.
+#    """
+#    cnt = c[given]
+#    py     = cnt[0]
+#    total  = cnt[1]
+#
+#    cnt = counts(data,used,given)
+#    #print(cnt)
+#    py_pxi = cnt[:,0]
+#    pxi    = cnt[:,1]
+#    S = np.zeros(len(data[0]))
+#    for i in range(len(data[0])-1):
+#        S[i] = infogain(py_pxi[i], pxi[i], py, total)
+#    #print S
+#    #print(np.max(S))
+#    for i in range(len(S)):
+#        if S[i] == np.max(S):
+#            #print i
+#            return i
+#    return 0
 
 def root_node(data, varnames):
     r"""
