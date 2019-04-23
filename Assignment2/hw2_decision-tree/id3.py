@@ -13,6 +13,44 @@ import node
 # Needed for math
 import numpy as np
 
+r"""
+ID3 algorithm (Examples, Target_Attributes, Attributes)
+    - Create root node for the tree
+    - If all examples are positive, return single-node tree Root with label +
+    - If all examples are negative, return single-node tree Root with label -
+    - If number of predicting attributes is empty, then return single node tree
+        root with label = most common value of target attribute in examples
+    - Else: Begin
+        - A <- Attribute that best classifies examples
+        - Decision tree attribute for root = A
+        - For each possible value, v_i, of A
+            - Add a new tree branch below root, corresponding to test A = v_i
+            - Let examples(v_i) be the subset of examples that have the 
+                value v_i for A
+            - If: Examples(v_i) is empty
+                - Below this new branch add a leaf node with label = most common
+                    target value in the examples
+            - Else: Below this new branch add subtree ID3(Examples(v_i), 
+                    Target_Attribute, Attributes - {A})
+    - End
+    -Return Root
+
+Rewritten:
+    Run counts(data) to get a matrix holding positive examples and total examples
+    if c[x,0] == c[x,1]: # All examples are positive
+        return single-node tree Root with label +
+    elif c[x,0] == 0: # All examples are negative
+        return single-node tree Root with label -
+    else:
+
+
+
+Calc best attr
+find one with most infogain
+recurse
+        
+"""
+
 
 train=None
 varnames=None
@@ -66,12 +104,14 @@ def infogain(py_pxi, pxi, py, total):
         print(py)
         print(total)
     S = entropy(frac)
-    assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
-    denom = float(np.sum(pxi))
+    #assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
     for i in range(len(pxi)):
-        S -= pxi[i]/denom * entropy(float(py_pxi[i])/float(pxi[i]))
+        S -= pxi[i]/total * entropy(float(py_pxi[i])/float(pxi[i]))
+    #S -= pxi/denom * entropy(float(py_pxi)/float(pxi))
     return S
 
+# Rewrite with only data def counts(data):
+# def counts(data):
 def counts(data, used, constraint=None):
     r"""
     Pass in the data and get returned the number of instances and how
@@ -135,9 +175,34 @@ def determine_next_node(data,given=[]):
     for i in range(len(varnames)-1):
         if varnames[i] == var:
             used[i] = 1
-    print varnames[i]
+    #print varnames[i]
     return var
     #return 0
+
+def next_node(c,data,given):
+    r"""
+    Take in the previous counts, all data, and the given variable
+    Calculate the entropy for the each variable given the previous 
+    condition and then return the variable with the highest information gain.
+    """
+    cnt = c[given]
+    py     = cnt[0]
+    total  = cnt[1]
+
+    cnt = counts(data,used,given)
+    #print(cnt)
+    py_pxi = cnt[:,0]
+    pxi    = cnt[:,1]
+    S = np.zeros(len(data[0]))
+    for i in range(len(data[0])-1):
+        S[i] = infogain(py_pxi[i], pxi[i], py, total)
+    #print S
+    #print(np.max(S))
+    for i in range(len(S)):
+        if S[i] == np.max(S):
+            #print i
+            return i
+    return 0
 
 def root_node(data, varnames):
     r"""
@@ -155,7 +220,30 @@ def root_node(data, varnames):
     print(varnames[var])
     return var
 
-        
+def get_data_prime(data,root_node,pos):
+    r"""
+    Modify the data so that it only contains values for root node
+    data is the original data
+    root_node is the index of the variable of the root node
+    pos is either 1 or 0, returning the cases where we have positive
+    instances or negative instances (splitting left and right)
+    """
+    assert(pos == 1 or pos == 0)
+    itr = 0
+    dp = np.zeros(len(data[0]))
+    # Hacky as shit, fix later, maybe
+    for i in range(len(data)):
+        if data[i,root_node] == pos:
+            dp = data[i]
+            itr = i
+            break
+
+    for i in range(itr,len(data)):
+        if data[i,root_node] == pos:
+            np.vstack((dp,data[i]))
+
+    return dp
+
 # OTHER SUGGESTED HELPER FUNCTIONS:
 # - collect counts for each variable value with each class label
 # - find the best variable to split on, according to mutual information
@@ -189,10 +277,15 @@ def build_tree(data, varnames):
     data: array of arrays containing the data [[row1],[row2],...,[rown]]
     varnames: array with variable names [header info]
     """
+    base_counts = counts(data, used)
+    print base_counts
     rn = root_node(data,varnames)
+    print rn
+    raw_input("Pause")
     root_name = varnames[rn]
-    left = determine_next_node(data,rn)
-    right= determine_next_node(data,rn)
+    next_node(base_counts, data, rn)
+    #left = determine_next_node(data,rn)
+    #right= determine_next_node(data,rn)
     return node.Leaf(varnames, 1)
     #return node.Leaf(varnames, root_node)
 
