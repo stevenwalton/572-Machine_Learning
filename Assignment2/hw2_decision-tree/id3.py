@@ -84,15 +84,11 @@ def infogain(py_pxi, pxi, py, total):
         total  = 14
     """
     frac = float(py)/float(total)
-    if (frac > 1 or frac < 0):
-        print frac
-        print(py)
-        print(total)
     S = entropy(frac)
-    #assert(len(py_pxi) == len(pxi)),"py_pxi and pxi are not the same length"
     for i in range(len(pxi)):
-        S -= pxi[i]/total * entropy(float(py_pxi[i])/float(pxi[i]))
-    #S -= pxi/denom * entropy(float(py_pxi)/float(pxi))
+        if pxi[i] == 0 and py_pxi[i] == 0: continue
+        else:
+            S -= pxi[i]/total * entropy(float(py_pxi[i])/float(pxi[i]))
     return S
 
 # Rewrite with only data def counts(data):
@@ -104,70 +100,140 @@ def counts(data, constraint=None):
     many times class == 1
     returns array [[+x,total]]
     """
-    c = np.zeros([len(data[0])-1, 2]) # rows, columns
-    #try:
-    #    c = np.zeros([len(data[0])-1, 2]) # rows, columns
-    #except TypeError:
-    #    print "Data[0] is an integer"
-    #    print data
-    #    exit(1)
+    arr_py_pxi = [[0]*2 for i in range(len(data[0])-1)]
+    arr_pxi    = [[0]*2 for i in range(len(data[0])-1)]
+    py = 0
+    total = 0
+    for row in range(len(data)):
+        total += 1
+        if data[row][-1] == 1: py += 1
+        for col in range(len(data[0])-1):
+            if col == constraint: continue
+            elif data[row][col] == 1:
+                arr_pxi[col][0] += 1
+                if data[row][-1] == 1:
+                    arr_py_pxi[col][0] += 1
+            elif data[row][col] == 0:
+                arr_pxi[col][1] += 1
+                if data[row][-1] == 1:
+                    arr_py_pxi[col][1] += 1
+            else:
+                print "Shouldn't be here"
+                exit(1)
+    return arr_py_pxi, arr_pxi,py,total
+    ##c = [[0]*2]*len(data[0]-1)
+    ##py_pxi = [0]*(len(data[0])-1)
+    ##pxi    = [0]*(len(data[0])-1)
     #for row in range(len(data)):
     #    for col in range(len(data[0])-1):
-    #        if used[col] == 0 and data[row][col] == 1:
-    #            c[col][1] += 1
+    #        if col == constraint: continue
+    #        elif data[row][col] == 1:
+    #            pxi[col] += 1
     #            if data[row][-1] == 1:
-    #                c[col][0] += 1
-    for row in range(len(data)):
-        for col in range(len(data[0])-1):
-            if col != constraint and data[row][col] == 1:
-                c[col][1] += 1
-                if data[row][-1] == 1:
-                    c[col][0] += 1
-    return c
-    #else: # Constrained (for info gain)
-    #    for row in range(len(data)):
-    #        for col in range(len(data[0])-1):
-    #            if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
-    #                c[col][1] += 1
-    #                if data[row][-1] == 1:
-    #                    c[col][0] += 1
-    #print(c)
-    #raw_input("Pause")
-    #return c
+    #                py_pxi[col] += 1
+    #print "py_pxi"
+    #print py_pxi
+    #print "pxi"
+    #print pxi
+    #return py_pxi,pxi
 
-def highest_info_gain(S,c):
+            
+    #   c = np.zeros([len(data[0])-1, 2]) # rows, columns
+    #   #try:
+    #   #    c = np.zeros([len(data[0])-1, 2]) # rows, columns
+    #   #except TypeError:
+    #   #    print "Data[0] is an integer"
+    #   #    print data
+    #   #    exit(1)
+    #   #for row in range(len(data)):
+    #   #    for col in range(len(data[0])-1):
+    #   #        if used[col] == 0 and data[row][col] == 1:
+    #   #            c[col][1] += 1
+    #   #            if data[row][-1] == 1:
+    #   #                c[col][0] += 1
+    #   for row in range(len(data)):
+    #       for col in range(len(data[0])-1):
+    #           if col != constraint and data[row][col] == 1:
+    #               c[col][1] += 1
+    #               if data[row][-1] == 1:
+    #                   c[col][0] += 1
+    #   return c
+    #   #else: # Constrained (for info gain)
+    #   #    for row in range(len(data)):
+    #   #        for col in range(len(data[0])-1):
+    #   #            if used[col] == 0 and data[row][constraint] == 1 and data[row][col] == 1:
+    #   #                c[col][1] += 1
+    #   #                if data[row][-1] == 1:
+    #   #                    c[col][0] += 1
+    #   #print(c)
+    #   #raw_input("Pause")
+    #   #return c
+
+def partition_data(data,split_on=None):
+    r"""
+    returns the left and right partition
+    binary split
+    """
+    left = []
+    right = []
+    for row in range(len(data)):
+        if data[row][split_on] == 1:
+            right.append(data[row])
+        elif data[row][split_on] == 0:
+            left.append(data[row])
+        else:
+            print "Can't be here"
+            exit(1)
+    return left,right
+
+
+
+#def highest_info_gain(S,c):
+def highest_info_gain(array_py_pxi, array_pxi, py, total, used=[]):
     r"""
     Pass in a entropy and counts list and get returned the variable with the highest info 
     gain
     S = entropy
     c = counts list
     """
-    highest_entropy = -1
-    #print S
-    #print c
-    for i in range(len(c)):
-        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
-        #print c[i,0]
-        #print c[i,1]
-        #print(entropy(float(c[i,0])/float(c[i,1])))
-        if c[i,1] == 0:
-            continue
-        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
-        #print current_entropy
-        if current_entropy > highest_entropy:
-            highest_entropy = current_entropy
-            var = i
-    #if current_entropy == 0:
-    #    print "Current entropy:",current_entropy
-    #    print "S:",S
-    #    print "num:",c[i,0]
-    #    print "denom:",c[i,1]
-    #    print entropy(float(c[i,0])/float(c[i,1]))
-    #    print "var:",var
-    for i in range(len(varnames)):
-        if varnames[i] == var:
-            used[i] = 1
+    highest_infoGain = -1
+    var = -1
+    for i in range(len(array_pxi)):
+        if used and i in used: continue
+        else:
+            ig = infogain(array_py_pxi[i],array_pxi[i],py,total)
+            if ig > highest_infoGain:
+                highest_infoGain = ig
+                var = i
+    assert(var != -1),"VAR IS -1!!!!"
     return var
+
+    #   highest_entropy = -1
+    #   #print S
+    #   #print c
+    #   for i in range(len(c)):
+    #       #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+    #       #print c[i,0]
+    #       #print c[i,1]
+    #       #print(entropy(float(c[i,0])/float(c[i,1])))
+    #       if c[i,1] == 0:
+    #           continue
+    #       current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
+    #       #print current_entropy
+    #       if current_entropy > highest_entropy:
+    #           highest_entropy = current_entropy
+    #           var = i
+    #   #if current_entropy == 0:
+    #   #    print "Current entropy:",current_entropy
+    #   #    print "S:",S
+    #   #    print "num:",c[i,0]
+    #   #    print "denom:",c[i,1]
+    #   #    print entropy(float(c[i,0])/float(c[i,1]))
+    #   #    print "var:",var
+    #   for i in range(len(varnames)):
+    #       if varnames[i] == var:
+    #           used[i] = 1
+    #   return var
 
 #def determine_next_node(counts,data,used):
 #def determine_next_node(data,given=[]):
@@ -219,22 +285,40 @@ def highest_info_gain(S,c):
 
 def root_node(data, varnames):
     r"""
-    Returns the variable for the root node
+    Returns the index of the root node
     """
-    rows = 0
-    yes  = 0
-    for row in range(len(data)):
-        if data[row][-1] == 1:
-            yes += 1
-        rows += 1
-    S = entropy(float(yes)/float(rows))
-    c = counts(data)
-    if S == 0:
-        return 0
-    var = highest_info_gain(S,c)
-    #print(varnames[var])
-    print(varnames)
-    return var
+    highest_entropy = -1
+    var = -1
+    row_count = 0
+    yes = 0
+    best_yes = -1
+    best_col = -1
+    for col in range(len(data[0])-1):
+        for row in range(len(data)):
+            if data[row][col] == 1:
+                row_count += 1
+                if data[row][-1] == 1:
+                    yes += 1
+        current_entropy = entropy(float(yes)/float(row_count))
+        if current_entropy > highest_entropy:
+            highest_entropy = current_entropy
+            var = col
+            best_col = row_count
+            best_yes = yes
+    #rows = 0
+    #yes  = 0
+    #for row in range(len(data)):
+    #    if data[row][-1] == 1:
+    #        yes += 1
+    #    rows += 1
+    #S = entropy(float(yes)/float(rows))
+    #c = counts(data)
+    #if S == 0:
+    #    return 0
+    #var = highest_info_gain(S,c)
+    ##print(varnames[var])
+    #print(varnames)
+    return var,best_yes,best_col
 
 def get_data_prime(data,root_node,pos):
     r"""
@@ -296,99 +380,157 @@ def print_model(root, modelfile):
 
 # Build tree in a top-down manner, selecting splits until we hit a
 # pure leaf or all splits look bad.
-def build_tree(data, varnames):
+def build_tree(data, varnames,used_attributes=[]):
     r"""
     Function used to build tree in a top down manner. 
     data: array of arrays containing the data [[row1],[row2],...,[rown]]
     varnames: array with variable names [header info]
     """
-    #print base_counts
-    # First find the root node
-    rn = root_node(data,varnames)
-    #print varnames
-    #raw_input("PAuse")
-    base_counts = counts(data)
-    #print "Base data"
-    #print data
-    #print "Root node:",rn,varnames[rn]
-    #raw_input("Pause")
+    arr_py_pxi, arr_pxi,py,total = counts(data)
+    # Array of info gains
+    print "used",used_attributes
+    split_on = highest_info_gain(arr_py_pxi, arr_pxi, py, total, used_attributes)
+    used_attributes.append(split_on)
+    print "Split on",varnames[split_on]
+    left, right = partition_data(data,split_on)
+    raw_input("Pause")
+    left_all_pos = False
+    left_all_neg = False
+    right_all_pos = False
+    right_all_neg = False
 
-    assert(len(base_counts) != 0), "Base counts is 0"
-    if len(base_counts) == 1:
-        if base_counts[0][0] >= 0.5*base_counts[0][1]:
-            return node.Leaf(varnames,1)
-        else: # More negative examples
-            return node.Leaf(varnames,0)
+    # node.Split(names, var, left,right)
+    #return node.Split(varnames,split_on,build_tree(left,varnames,split_on), build_tree(right,varnames, split_on))
+    #if all(sum(left[i])==len(left[i]) for i in range(len(left))):
+    #    left_all_pos == True
+    #elif all(sum(left[i])==0 for i in range(len(left))):
+    #    left_all_neg == True
+    #if all(sum(right[i])==len(right[i]) for i in range(len(right))):
+    #    right_all_pos == True
+    #elif all(sum(right[i])==0 for i in range(len(right))):
+    #    right_all_neg == True
 
-    # Find the new data sets for left and right
-    data_right = get_data_prime(data,rn,1)
-    #print "Right data"
-    #print data_right
-    #raw_input("Pause")
-    data_left  = get_data_prime(data,rn,0)
-    #print "Left data"
-    #print data_left
-    #raw_input("Pause")
-    # Get the counts
-    #counts_right = counts(data_right,rn)
-    #counts_left  = counts(data_left,rn)
-    new_varnames = varnames[:rn] + varnames[(rn+1):]
-    # Check returns
-    # only split right: left terminates
-    #if len(data_left) <= len(varnames):
-    if type(data_left[0]) == np.int64 and type(data_right[0]) == np.int64:
-        return node.Leaf(new_varnames,1)
-    if type(data_left[0]) == np.float64 and type(data_right[0]) == np.float64:
-        return node.Leaf(new_varnames,1)
-    if type(data_left[0]) == np.float64 or type(data_left[0]) == np.int64:
-        #print data_left
-        counts_right = counts(data_right,rn)
-        #if counts_left[0][0] >= 0.5*counts_left[0][1]:
-        #if counts_left[:-1] == 1:
-        if data_left[-1] == 1:
-            l = 1
-        else:
-            l = 0
-        return node.Split(data, \
-                          rn,\
-                          node.Leaf(new_varnames,l),\
-                          build_tree(data_right,new_varnames))
-
-        # only split left: right terminates
-    #elif len(data_right) == len(data[0]) or len(counts_right) <= len(varnames):
-    #elif len(data_right) <= len(varnames):
-    elif type(data_right[0]) == np.float64 or type(data_right[0]) == np.int64:
-        #counts_right = counts(data_right,rn)
-        #if counts_right[0][0] >= 0.5*counts_right[0][1]:
-        counts_left = counts(data_left,rn)
-        #print data_right
-        #if counts_right[:-1] == 1:
-        if data_right[-1] == 1:
-            l = 1
-        else:
-            l = 0
-        return node.Split(data, \
-                          rn,\
-                          build_tree(data_left,new_varnames), \
-                          node.Leaf(new_varnames,l))
-    # Continue both ways
-    counts_right = counts(data_right,rn)
-    counts_left  = counts(data_left,rn)
-    return node.Split(data, \
-                      rn,\
-                      build_tree(data_left,new_varnames),\
-                      build_tree(data_right,new_varnames))
+    #if left_all_pos and right_all_pos:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,1),node.Leaf(varnames,1))
+    #elif left_all_neg and right_all_neg:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,0),node.Leaf(varnames,0))
+    #elif left_all_pos and right_all_neg:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,1),node.Leaf(varnames,0))
+    #elif left_all_neg and right_all_pos:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,0),node.Leaf(varnames,1))
+    #elif left_all_neg:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,0),build_tree(right,varnames,used_attributes))
+    #elif left_all_pos:
+    #    return Node.Split(varnames,split_on,node.Leaf(varnames,1),build_tree(right,varnames,used_attributes))
+    #elif right_all_neg:
+    #    return Node.Split(varnames,split_on,build_tree(right,varnames,used_attributes),node.Leaf(varnames,0))
+    #elif right_all_pos:
+    #    return Node.Split(varnames,split_on,build_tree(right,varnames,used_attributes),node.Leaf(varnames,1))
+    #else:
+    #    return node.Split(varnames,split_on,build_tree(left,varnames,used_attributes), build_tree(right,varnames, used_attributes))
+    return node.Split(varnames,split_on,build_tree(left,varnames,used_attributes), build_tree(right,varnames, used_attributes))
 
 
 
-    #print rn
-    #raw_input("Pause")
-    #root_name = varnames[rn]
-    #next_node(base_counts, data, rn)
-    #left = determine_next_node(data,rn)
-    #right= determine_next_node(data,rn)
-    #return node.Leaf(varnames, 1)
-    #return node.Leaf(varnames, root_node)
+
+
+
+
+
+
+
+
+    #py_pxi, pxi = counts(data,rn)
+    #ig = infogain(py_pxi,pxi,py,total)
+    
+
+    #   #print base_counts
+    #   # First find the root node
+    #   rn = root_node(data,varnames)
+    #   #print varnames
+    #   #raw_input("PAuse")
+    #   base_counts = counts(data)
+    #   #print "Base data"
+    #   #print data
+    #   #print "Root node:",rn,varnames[rn]
+    #   #raw_input("Pause")
+
+    #   assert(len(base_counts) != 0), "Base counts is 0"
+    #   if len(base_counts) == 1:
+    #       if base_counts[0][0] >= 0.5*base_counts[0][1]:
+    #           return node.Leaf(varnames,1)
+    #       else: # More negative examples
+    #           return node.Leaf(varnames,0)
+
+    #   # Find the new data sets for left and right
+    #   data_right = get_data_prime(data,rn,1)
+    #   #print "Right data"
+    #   #print data_right
+    #   #raw_input("Pause")
+    #   data_left  = get_data_prime(data,rn,0)
+    #   #print "Left data"
+    #   #print data_left
+    #   #raw_input("Pause")
+    #   # Get the counts
+    #   #counts_right = counts(data_right,rn)
+    #   #counts_left  = counts(data_left,rn)
+    #   new_varnames = varnames[:rn] + varnames[(rn+1):]
+    #   # Check returns
+    #   # only split right: left terminates
+    #   #if len(data_left) <= len(varnames):
+    #   if type(data_left[0]) == np.int64 and type(data_right[0]) == np.int64:
+    #       return node.Leaf(new_varnames,1)
+    #   if type(data_left[0]) == np.float64 and type(data_right[0]) == np.float64:
+    #       return node.Leaf(new_varnames,1)
+    #   if type(data_left[0]) == np.float64 or type(data_left[0]) == np.int64:
+    #       #print data_left
+    #       counts_right = counts(data_right,rn)
+    #       #if counts_left[0][0] >= 0.5*counts_left[0][1]:
+    #       #if counts_left[:-1] == 1:
+    #       if data_left[-1] == 1:
+    #           l = 1
+    #       else:
+    #           l = 0
+    #       return node.Split(data, \
+    #                         rn,\
+    #                         node.Leaf(new_varnames,l),\
+    #                         build_tree(data_right,new_varnames))
+
+    #       # only split left: right terminates
+    #   #elif len(data_right) == len(data[0]) or len(counts_right) <= len(varnames):
+    #   #elif len(data_right) <= len(varnames):
+    #   elif type(data_right[0]) == np.float64 or type(data_right[0]) == np.int64:
+    #       #counts_right = counts(data_right,rn)
+    #       #if counts_right[0][0] >= 0.5*counts_right[0][1]:
+    #       counts_left = counts(data_left,rn)
+    #       #print data_right
+    #       #if counts_right[:-1] == 1:
+    #       if data_right[-1] == 1:
+    #           l = 1
+    #       else:
+    #           l = 0
+    #       return node.Split(data, \
+    #                         rn,\
+    #                         build_tree(data_left,new_varnames), \
+    #                         node.Leaf(new_varnames,l))
+    #   # Continue both ways
+    #   counts_right = counts(data_right,rn)
+    #   counts_left  = counts(data_left,rn)
+    #   return node.Split(data, \
+    #                     rn,\
+    #                     build_tree(data_left,new_varnames),\
+    #                     build_tree(data_right,new_varnames))
+
+
+
+    #   #print rn
+    #   #raw_input("Pause")
+    #   #root_name = varnames[rn]
+    #   #next_node(base_counts, data, rn)
+    #   #left = determine_next_node(data,rn)
+    #   #right= determine_next_node(data,rn)
+    #   #return node.Leaf(varnames, 1)
+    #   #return node.Leaf(varnames, root_node)
 
 
 # "varnames" is a list of names, one for each variable
