@@ -9,9 +9,10 @@ import sys
 import re
 # Node class for the decision tree
 import node
+import math
 
 # Needed for math
-import numpy as np
+#import numpy as np
 
 r"""
 ID3 algorithm (Examples, Target_Attributes, Attributes)
@@ -56,7 +57,8 @@ def entropy(p): # -> float
     # Check for nans
     if (p == 0) or (p == 1):
         return 0
-    e = ((-p*np.log2(p)) - ((1.-p)*(np.log2(1.-p))))
+    #e = ((-p*np.log2(p)) - ((1.-p)*(np.log2(1.-p))))
+    e = ((-p*math.log(p,2)) - ((1.-p)*(math.log(1.-p,2))))
     assert(e >= 0 and e <= 1),"Entropy is bounded on [0,1]"
     return e
 
@@ -386,6 +388,38 @@ def build_tree(data, varnames,used_attributes=[]):
     data: array of arrays containing the data [[row1],[row2],...,[rown]]
     varnames: array with variable names [header info]
     """
+    #try:
+    #    print "len:",len(data[0])
+    #    print "len data",len(data)
+    #    if len(data) <= 3:
+    #        print data
+    #except:
+    #    print "Data is a vector"
+    #    print data
+    #    exit(1)
+    #try:
+    #    len(data)
+    #    len(data[0])
+    #except:
+    #    print "data",data
+    #    #print "data[0]",data[0]
+    #    print "t1:",type(data)
+    #    print "type:",type(data[0])
+    #    exit(1)
+    #if type(data[0]) == int or not type(data[0]):
+    #if data == [] or data[0] == [] or type(data[0]) == int:
+    if len(data)==1:
+        print "Len data == 1"
+        #print "data",data
+        #print "data[0]",data[0]
+        s = sum(data[0])
+        #print data[-1]
+        if data[0][-1] == 1:
+            print "Returning 1"
+            return node.Leaf(varnames,1)
+        else:
+            print "Returning 0"
+            return node.Leaf(varnames,0)
     arr_py_pxi, arr_pxi,py,total = counts(data)
     # Array of info gains
     print "used",used_attributes
@@ -393,11 +427,23 @@ def build_tree(data, varnames,used_attributes=[]):
     used_attributes.append(split_on)
     print "Split on",varnames[split_on]
     left, right = partition_data(data,split_on)
-    raw_input("Pause")
-    left_all_pos = False
-    left_all_neg = False
-    right_all_pos = False
-    right_all_neg = False
+    pure_left = all((left[i][-1] == 1) or (left[i][-1] == 0) for i in range(len(left)))
+    pure_right = all((right[i][-1] == 1) or (right[i][-1] == 0) for i in range(len(right)))
+    if pure_left or pure_right:
+        if pure_left and pure_right:
+            return node.Split(varnames, split_on, node.Leaf(varnames,left[0][-1]), node.Leaf(varnames,right[0][-1]))
+        elif pure_left:
+            return node.Split(varnames, split_on, node.Leaf(varnames,left[0][-1]), build_tree(right, varnames, used_attributes))
+        else:
+            return node.Split(varnames, split_on, build_tree(left,varnames, used_attributes), node.Leaf(varnames, right[0][-1]))
+
+    
+    return node.Split(varnames,split_on,build_tree(left,varnames,used_attributes), build_tree(right,varnames, used_attributes))
+    #raw_input("Pause")
+    #left_all_pos = False
+    #left_all_neg = False
+    #right_all_pos = False
+    #right_all_neg = False
 
     # node.Split(names, var, left,right)
     #return node.Split(varnames,split_on,build_tree(left,varnames,split_on), build_tree(right,varnames, split_on))
@@ -428,7 +474,6 @@ def build_tree(data, varnames,used_attributes=[]):
     #    return Node.Split(varnames,split_on,build_tree(right,varnames,used_attributes),node.Leaf(varnames,1))
     #else:
     #    return node.Split(varnames,split_on,build_tree(left,varnames,used_attributes), build_tree(right,varnames, used_attributes))
-    return node.Split(varnames,split_on,build_tree(left,varnames,used_attributes), build_tree(right,varnames, used_attributes))
 
 
 
@@ -552,7 +597,7 @@ def loadAndTrain(trainS,testS,modelS):
     # build_tree is the main function you'll have to implement, along with
     # any helper functions needed.  It should return the root node of the
     # decision tree.
-    root = build_tree(np.asarray(train), varnames)
+    root = build_tree(train, varnames)
     print_model(root, modelfile)
     #print("Current tree:")
     #root.write(sys.stdout,0)
