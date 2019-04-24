@@ -34,21 +34,6 @@ ID3 algorithm (Examples, Target_Attributes, Attributes)
                     Target_Attribute, Attributes - {A})
     - End
     -Return Root
-
-Rewritten:
-    Run counts(data) to get a matrix holding positive examples and total examples
-    if c[x,0] == c[x,1]: # All examples are positive
-        return single-node tree Root with label +
-    elif c[x,0] == 0: # All examples are negative
-        return single-node tree Root with label -
-    else:
-
-
-
-Calc best attr
-find one with most infogain
-recurse
-        
 """
 
 
@@ -112,16 +97,29 @@ def infogain(py_pxi, pxi, py, total):
 
 # Rewrite with only data def counts(data):
 # def counts(data):
-def counts(data, used, constraint=None):
+#def counts(data, used, constraint=None):
+def counts(data, constraint=None):
     r"""
     Pass in the data and get returned the number of instances and how
     many times class == 1
     returns array [[+x,total]]
     """
     c = np.zeros([len(data[0])-1, 2]) # rows, columns
+    #try:
+    #    c = np.zeros([len(data[0])-1, 2]) # rows, columns
+    #except TypeError:
+    #    print "Data[0] is an integer"
+    #    print data
+    #    exit(1)
+    #for row in range(len(data)):
+    #    for col in range(len(data[0])-1):
+    #        if used[col] == 0 and data[row][col] == 1:
+    #            c[col][1] += 1
+    #            if data[row][-1] == 1:
+    #                c[col][0] += 1
     for row in range(len(data)):
         for col in range(len(data[0])-1):
-            if used[col] == 0 and data[row][col] == 1:
+            if col != constraint and data[row][col] == 1:
                 c[col][1] += 1
                 if data[row][-1] == 1:
                     c[col][0] += 1
@@ -137,24 +135,39 @@ def counts(data, used, constraint=None):
     #raw_input("Pause")
     #return c
 
-#def highest_info_gain(S,c):
-#    r"""
-#    Pass in a entropy and counts list and get returned the variable with the highest info 
-#    gain
-#    S = entropy
-#    c = counts list
-#    """
-#    highest_entropy = 0 
-#    for i in range(len(c)):
-#        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
-#        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
-#        if current_entropy > highest_entropy:
-#            highest_entropy = current_entropy
-#            var = i
-#    for i in range(len(varnames)):
-#        if varnames[i] == var:
-#            used[i] = 1
-#    return var
+def highest_info_gain(S,c):
+    r"""
+    Pass in a entropy and counts list and get returned the variable with the highest info 
+    gain
+    S = entropy
+    c = counts list
+    """
+    highest_entropy = -1
+    #print S
+    #print c
+    for i in range(len(c)):
+        #current_entropy = S - entropy(float(c[i,1])/float(c[i,0]))
+        #print c[i,0]
+        #print c[i,1]
+        #print(entropy(float(c[i,0])/float(c[i,1])))
+        if c[i,1] == 0:
+            continue
+        current_entropy = S - entropy(float(c[i,0])/float(c[i,1]))
+        #print current_entropy
+        if current_entropy > highest_entropy:
+            highest_entropy = current_entropy
+            var = i
+    #if current_entropy == 0:
+    #    print "Current entropy:",current_entropy
+    #    print "S:",S
+    #    print "num:",c[i,0]
+    #    print "denom:",c[i,1]
+    #    print entropy(float(c[i,0])/float(c[i,1]))
+    #    print "var:",var
+    for i in range(len(varnames)):
+        if varnames[i] == var:
+            used[i] = 1
+    return var
 
 #def determine_next_node(counts,data,used):
 #def determine_next_node(data,given=[]):
@@ -215,9 +228,12 @@ def root_node(data, varnames):
             yes += 1
         rows += 1
     S = entropy(float(yes)/float(rows))
-    c = counts(data, used)
+    c = counts(data)
+    if S == 0:
+        return 0
     var = highest_info_gain(S,c)
-    print(varnames[var])
+    #print(varnames[var])
+    print(varnames)
     return var
 
 def get_data_prime(data,root_node,pos):
@@ -230,18 +246,27 @@ def get_data_prime(data,root_node,pos):
     """
     assert(pos == 1 or pos == 0)
     itr = 0
-    dp = np.zeros(len(data[0]))
+    dp = np.zeros(len(data[0])-1)
     # Hacky as shit, fix later, maybe
     for i in range(len(data)):
-        if data[i,root_node] == pos:
-            dp = data[i]
-            itr = i
+        if data[i][root_node] == pos:
+            dp = np.hstack((data[i][:root_node],data[i][(root_node+1):]))
+            #dp = data[i][:root_node] + data[i][(root_node+1):]
+            itr = i+1
             break
 
+    #print(len(dp))
+    #print dp
     for i in range(itr,len(data)):
-        if data[i,root_node] == pos:
-            np.vstack((dp,data[i]))
-
+        if data[i][root_node] == pos:
+            try:
+                tmp = np.hstack((data[i][:root_node],data[i][(root_node+1):]))
+            except:
+                print "data[i][:root_node]",data[i][:root_node]
+                print "data[i][root_node+1:]",data[i][root_node+1:]
+                exit(1)
+            #dp = np.vstack((dp,data[i][:root_node] + data[i][(root_node+1):]))
+            dp = np.vstack((dp,tmp))
     return dp
 
 # OTHER SUGGESTED HELPER FUNCTIONS:
@@ -277,16 +302,92 @@ def build_tree(data, varnames):
     data: array of arrays containing the data [[row1],[row2],...,[rown]]
     varnames: array with variable names [header info]
     """
-    base_counts = counts(data, used)
-    print base_counts
+    #print base_counts
+    # First find the root node
     rn = root_node(data,varnames)
-    print rn
-    raw_input("Pause")
-    root_name = varnames[rn]
-    next_node(base_counts, data, rn)
+    #print varnames
+    #raw_input("PAuse")
+    base_counts = counts(data)
+    #print "Base data"
+    #print data
+    #print "Root node:",rn,varnames[rn]
+    #raw_input("Pause")
+
+    assert(len(base_counts) != 0), "Base counts is 0"
+    if len(base_counts) == 1:
+        if base_counts[0][0] >= 0.5*base_counts[0][1]:
+            return node.Leaf(varnames,1)
+        else: # More negative examples
+            return node.Leaf(varnames,0)
+
+    # Find the new data sets for left and right
+    data_right = get_data_prime(data,rn,1)
+    #print "Right data"
+    #print data_right
+    #raw_input("Pause")
+    data_left  = get_data_prime(data,rn,0)
+    #print "Left data"
+    #print data_left
+    #raw_input("Pause")
+    # Get the counts
+    #counts_right = counts(data_right,rn)
+    #counts_left  = counts(data_left,rn)
+    new_varnames = varnames[:rn] + varnames[(rn+1):]
+    # Check returns
+    # only split right: left terminates
+    #if len(data_left) <= len(varnames):
+    if type(data_left[0]) == np.int64 and type(data_right[0]) == np.int64:
+        return node.Leaf(new_varnames,1)
+    if type(data_left[0]) == np.float64 and type(data_right[0]) == np.float64:
+        return node.Leaf(new_varnames,1)
+    if type(data_left[0]) == np.float64 or type(data_left[0]) == np.int64:
+        #print data_left
+        counts_right = counts(data_right,rn)
+        #if counts_left[0][0] >= 0.5*counts_left[0][1]:
+        #if counts_left[:-1] == 1:
+        if data_left[-1] == 1:
+            l = 1
+        else:
+            l = 0
+        return node.Split(data, \
+                          rn,\
+                          node.Leaf(new_varnames,l),\
+                          build_tree(data_right,new_varnames))
+
+        # only split left: right terminates
+    #elif len(data_right) == len(data[0]) or len(counts_right) <= len(varnames):
+    #elif len(data_right) <= len(varnames):
+    elif type(data_right[0]) == np.float64 or type(data_right[0]) == np.int64:
+        #counts_right = counts(data_right,rn)
+        #if counts_right[0][0] >= 0.5*counts_right[0][1]:
+        counts_left = counts(data_left,rn)
+        #print data_right
+        #if counts_right[:-1] == 1:
+        if data_right[-1] == 1:
+            l = 1
+        else:
+            l = 0
+        return node.Split(data, \
+                          rn,\
+                          build_tree(data_left,new_varnames), \
+                          node.Leaf(new_varnames,l))
+    # Continue both ways
+    counts_right = counts(data_right,rn)
+    counts_left  = counts(data_left,rn)
+    return node.Split(data, \
+                      rn,\
+                      build_tree(data_left,new_varnames),\
+                      build_tree(data_right,new_varnames))
+
+
+
+    #print rn
+    #raw_input("Pause")
+    #root_name = varnames[rn]
+    #next_node(base_counts, data, rn)
     #left = determine_next_node(data,rn)
     #right= determine_next_node(data,rn)
-    return node.Leaf(varnames, 1)
+    #return node.Leaf(varnames, 1)
     #return node.Leaf(varnames, root_node)
 
 
@@ -304,15 +405,15 @@ def loadAndTrain(trainS,testS,modelS):
     (train, varnames) = read_data(trainS)
     (test, testvarnames) = read_data(testS)
     modelfile = modelS
-    used = np.zeros(len(varnames)-1)
+    #used = np.zeros(len(varnames)-1)
 
     # build_tree is the main function you'll have to implement, along with
     # any helper functions needed.  It should return the root node of the
     # decision tree.
-    root = build_tree(train, varnames)
+    root = build_tree(np.asarray(train), varnames)
     print_model(root, modelfile)
-    print("Current tree:")
-    root.write(sys.stdout,0)
+    #print("Current tree:")
+    #root.write(sys.stdout,0)
 
 def runTest():
     correct = 0
