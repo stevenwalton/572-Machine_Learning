@@ -87,7 +87,11 @@ def infogain(py_pxi, pxi, py, total):
     """
     frac = float(py)/float(total)
     S = entropy(frac)
-    for i in range(len(pxi)):
+    if type(pxi) is list:
+        l = len(pxi)
+    else:
+        l = 1
+    for i in range(l):
         if pxi[i] == 0 and py_pxi[i] == 0: continue
         else:
             S -= pxi[i]/total * entropy(float(py_pxi[i])/float(pxi[i]))
@@ -102,8 +106,12 @@ def counts(data, constraint=None):
     many times class == 1
     returns array [[+x,total]]
     """
-    arr_py_pxi = [[0]*2 for i in range(len(data[0])-1)]
-    arr_pxi    = [[0]*2 for i in range(len(data[0])-1)]
+    if type(data[0]) is list:
+        arr_py_pxi = [[0]*2 for i in range(len(data[0])-1)]
+        arr_pxi    = [[0]*2 for i in range(len(data[0])-1)]
+    else:
+        arr_py_pxi = [[0,0]]
+        arr_pxi    = [[0,0]]
     py = 0
     total = 0
     for row in range(len(data)):
@@ -408,28 +416,58 @@ def build_tree(data, varnames,used_attributes=[]):
     #    exit(1)
     #if type(data[0]) == int or not type(data[0]):
     #if data == [] or data[0] == [] or type(data[0]) == int:
-    if len(data)==1:
-        print "Len data == 1"
-        #print "data",data
-        #print "data[0]",data[0]
-        s = sum(data[0])
-        #print data[-1]
-        if data[0][-1] == 1:
-            print "Returning 1"
-            return node.Leaf(varnames,1)
-        else:
-            print "Returning 0"
-            return node.Leaf(varnames,0)
+    #if len(data)==1:
+    #    print "Len data == 1"
+    #    #print "data",data
+    #    #print "data[0]",data[0]
+    #    s = sum(data[0])
+    #    #print data[-1]
+    #    if data[0][-1] == 1:
+    #        print "Returning 1"
+    #        return node.Leaf(varnames,1)
+    #    else:
+    #        print "Returning 0"
+    #        return node.Leaf(varnames,0)
     arr_py_pxi, arr_pxi,py,total = counts(data)
     # Array of info gains
-    print "used",used_attributes
+    #print "used",used_attributes
+    if len(used_attributes) == len(arr_pxi):
+        #print data
+        #print len(data),"x",len(data[0])
+        #print used_attributes[-1]
+        #a = used_attributes[-1]
+        #print data[0][:]
+        ind = used_attributes[-1]
+        #print ind
+        #print data
+        #print data[:][-1]
+        #s = sum(data[:][-1])
+        s = 0
+        total = 0
+        for row in range(len(data)):
+            s += data[row][19]
+            total += data[row][-1]
+        #print "sum:",s
+        #print "total:",total
+        if s >= 0.5*total:
+            x = 1
+        else:
+            x = 0
+        return node.Leaf(varnames,x)
     split_on = highest_info_gain(arr_py_pxi, arr_pxi, py, total, used_attributes)
     used_attributes.append(split_on)
     print "Split on",varnames[split_on]
     left, right = partition_data(data,split_on)
-    pure_left = all((left[i][-1] == 1) or (left[i][-1] == 0) for i in range(len(left)))
-    pure_right = all((right[i][-1] == 1) or (right[i][-1] == 0) for i in range(len(right)))
+
+    pure_left = all((left[i][-1] == 1) for i in range(len(left))) or \
+                all((left[i][-1] == 0) for i in range(len(left)))
+    pure_right = all((right[i][-1] == 1) for i in range(len(right))) or \
+                all((right[i][-1] == 0) for i in range(len(right)))
+
     if pure_left or pure_right:
+        #print "We got a pure blood"
+        #if pure_left: print "left",left[0][-1]
+        #if pure_right: print "right",right[0][-1]
         if pure_left and pure_right:
             return node.Split(varnames, split_on, node.Leaf(varnames,left[0][-1]), node.Leaf(varnames,right[0][-1]))
         elif pure_left:
