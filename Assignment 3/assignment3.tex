@@ -139,52 +139,54 @@ in each metric. We can do this simply with python my doing the following:
 \\
 \begin{lstlisting}[language=Python]
 for i in range(len(historical_data)):
-    print(np.linalg.norm(historical_data[i][:-1] - p1))
-14.331172317713579
->> 6.715362983487936
-10.955934464937256
-11.102364613000242
-10.120182804673046
-7.706004152607238
-17.974818496997404
-9.285558680014898
-11.509235422042595
-14.42061371786929
+    print(np.linalg.norm(historical_data[i][:-1] - p1,1))
+22.95
+>>> 11.309999999999999
+16.25
+17.65
+15.99
+11.95
+25.39
+14.559999999999999
+18.05
+18.99
 
-for i in range(len(hist_data)):
-    print(np.linalg.norm(hist_data[i][:-1]-p2))
+for i in range(len(historical_data)):
+    print(np.linalg.norm(historical_data[i][:-1]-p2,1))
+>>> 1.5
+13.139999999999999
+8.3
+6.8
+8.46
+12.5
+9.06
+10.01
+8.5
+9.46
 
->> 1.0977249200050074
-8.295818223659436
-6.329691935631622
-3.898076448711595
-5.0992744581950085
-10.154063226117907
-5.908857757638104
-6.760628668992256
-5.657296173968621
-5.838544339131116
-
-for i in range(len(hist_data)):
-    print(np.linalg.norm(hist_data[i][:-1]-p3))
-
-2.4495918027295893
-6.345210792400832
-4.8268519761848925
->> 2.2526650882898682
-3.0001499962501876
-9.11046102016797
-6.265500778070337
-5.1242755585545945
-5.000649957755492
-4.249341125398148
+for i in range(len(historical_data)):
+    print(np.linalg.norm(historical_data[i][:-1]-p3,1))
+4.03
+8.649999999999999
+7.73
+3.31
+>>> 3.03
+11.03
+8.59
+6.6
+7.09
+6.37
 \end{lstlisting}
-We can easily see that the closest label (marked with $>>$) is that of ID=2, which is labeled BAD,
-therefore we should label P1 as BAD.
+We use numpy's linear algebra package to call upon norm. Norm defaults to the
+Euclidean norm, but by passing 1 to the second parameter we can get the 
+Manhattan distance.
+
+We can easily see that the closest label (marked with $>>>$) is that of ID=2, 
+which is labeled BAD, therefore we should label P1 as BAD.
 
 Doing this again we see that P2 is closest to ID=1, so GOOD.
 
-P3 is closest to ID=4, so BAD
+P3 is closest to ID=5, so GOOD
 
 Giving us
 \begin{table}[h!]
@@ -195,7 +197,7 @@ Giving us
         \hline
         20 & 0.50 & 0.9  & 4.5 & 12 & BAD\\
         8  & 0.10 & 1.0 & 0.55  & 4  & GOOD\\
-        9  & 0.13 & 0.99  & 3 & 6  & BAD\\
+        9  & 0.13 & 0.99  & 3 & 6  & GOOD\\
         \hline
     \end{tabular}
 \end{table}
