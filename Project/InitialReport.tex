@@ -1,0 +1,122 @@
+\documentclass[12pt,letter]{article}
+\usepackage{geometry}\geometry{margin=0.75in}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{xcolor}	% Color words
+\usepackage{cancel}	% Crossing parts of equations out
+\usepackage{tikz}    	% Drawing 
+\usepackage{pgfplots}   % Other plotting
+\usepgfplotslibrary{colormaps,fillbetween}
+\usepackage{placeins}   % Float barrier
+\usepackage{hyperref}   % Links
+\usepackage{tikz-qtree} % Trees
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{multicol}
+\usepackage{graphicx}   % For graphics
+\usepackage{parcolumns}
+\usepackage{listings}   % lstlisting
+\usepackage{pgfgantt}
+
+%\tikzset{
+%    treenode/.style = {shape=rectangle, rounded corners, draw, align=center}
+%    root/.style     = {treenode, font=\Large}
+%    env/.style      = {treenode, font=\ttyfamily\normalsize},
+%    dummy/.style    = {circle,draw}
+%}
+
+%\tikzset{every tree node/.style={circle,align=center, anchor=west, grow=right}
+%	}
+\tikzset{every tree node/.style={align=center,minimum width=2em},%, draw},%, circle},
+	 grow=right,
+	 level distance=1.75cm}
+
+% Don't indent
+\setlength{\parindent}{0pt}
+% Function to replace \section with a problem name specifically formatted
+\newcommand{\problem}[1]{\vspace{3mm}\Large\textbf{{Problem {#1}\vspace{3mm}}}\normalsize\\}
+% Formatting function, like \problem
+\newcommand{\ppart}[1]{\vspace{2mm}\large\textbf{\\Part {#1})\vspace{2mm}}\normalsize\\}
+\newcommand{\documentation}[1]{\vspace{2mm}\large\textbf{\\Documentation{#1}\vspace{2mm}}\normalsize\\}
+% Formatting 
+\newcommand{\condition}[1]{\vspace{1mm}\textbf{{#1}:}\normalsize\\}
+
+\begin{document}
+\title{CIS 572: Streamline Development via Autoencoders\\
+\large Algorithmic Development}
+\author{Steven Walton}
+\maketitle
+
+\section{Project Description}
+In this project we will investigate the use of autoencoders to develop streamlines.
+Inspired by \href{https://ieeexplore.ieee.org/document/8532319}{FlowNet}
+In this project I will use this idea to build a variation upon this method that 
+has an input of streamlines and the decoder outputs only the relevant pathlines. 
+
+\subsection{Background}
+There is an open problem in flow visualization about how to make good pathline
+visualizations. While it is simple to create a large number of them, this can
+be overwhelming for the domain scientists and can actually hide important information,
+either by occlusion or distraction. Figure~\ref{fig:TooMany} shows an example
+image that has too many streamlines. Conversely, having too few streamlines means
+that a feature may be missed. Additionally even with the same number of streamlines,
+not picking the right ones can lead to a different interpretation of an image.
+Figure~\ref{fig:50SL} shows an example where both images have the same number
+of streamlines but show different relevant features. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{manySL.png}
+    \caption{Example of many too many streamlines}
+    \label{fig:TooMany}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{streamlines.png}
+    \caption{Both images have 50 streamlines but show different information}
+    \label{fig:50SL}
+\end{figure}
+In Image A we can see that the blue regions have redundant features, lines that 
+are really similar. In Image B we see sinks and sources that were not as apparent
+in Image A. This demonstrates only some of the challenges in generating good
+visualizations for streamlines. 
+
+\FloatBarrier
+\section{Work Plan}
+As may be inferred from the background, we can think of features as an encoding.
+This suggests that autoencoding might be a useful tactic to generate good images.
+Being that I am attempting to develop a new method, several different things
+will have to be attempted and there is a high risk that a good encoder is not
+completed by the time the class ends, though this is research my advisor is
+interested in and would like to pursue if these trials show promise. 
+
+The first attempt will be to try to use an autoencoder on generated streamlines
+and try to reduce these streamlines to only relevant ones (an open problem). 
+If success can be achieved here it appears that the next logical step is to
+test it against a variational autoencoder. My inclination is that the probabilistic
+nature of the variational encoder may help escape local minima and reveal better
+features. It is hopeful that I will be able to achieve this by the end of the
+class.
+
+As a continuation, likely beyond the scope of this class, I would like to find 
+a way to generate streamlines using an autoencoder directly from vector fields. 
+If this can be done, then a preprocessing step can be removed and this will be
+a big step forward for use in applications. I believe this may be possible because
+we can imagine that these streamlines are an encoding of the vector fields themselves.
+Figure~\ref{fig:vecfield} shows two streamlines overlaying a vector field. We can 
+see that the streamlines are showing how the vectors point. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{vecfield.png}
+    \caption{Two streamlines overlaid on a vector field}
+    \label{fig:vecfield}
+\end{figure}
+It may be possible to think of streamlines as an encoding of the vector directions,
+excluding their magnitude. Scientists already calculate out these vector fields,
+and need this for further calculations. Therefore it may be possible to teach
+an autoencoder to represent the vector field as streamlines.
+
+
+
+\end{document}
