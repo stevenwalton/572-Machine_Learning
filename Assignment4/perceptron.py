@@ -37,6 +37,8 @@ def train_perceptron(data):
   numvars = len(data[0][0])
   w = [0.0] * numvars
   b = 0.0
+  for itr in range(MAX_ITERS):
+      pass
 
   #
   # YOUR CODE HERE!
