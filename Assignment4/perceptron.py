@@ -38,12 +38,18 @@ def train_perceptron(data):
   w = [0.0] * numvars
   b = 0.0
   for itr in range(MAX_ITERS):
-      pass
-
-  #
-  # YOUR CODE HERE!
-  #
-
+      # Some loop for all (x,y) in D do
+      for i in range(len(data)):
+        (x,y) = data[i]
+        #a = 0.
+        a = b
+        for d in range(len(x)):
+            a += w[d]*x[d]
+        #a += b
+        if a*y <= 0:
+            for d in range(len(w)):
+                w[d] = w[d] + y*x[d]
+            b += y
   return (w,b)
 
 
@@ -51,12 +57,13 @@ def train_perceptron(data):
 # (NOTE: This should be a real-valued number, not simply +1/-1.)
 def predict_perceptron(model, x):
   (w,b) = model
-
-  #
-  # YOUR CODE HERE!
-  #
-
-  return 0.0
+  a = 0
+  for i in range(len(x)):
+      a += w[i]*x[i]
+  a += b
+  if a > 0:
+      return 1.
+  return -1.
 
 
 # Load train and test data.  Learn model.  Report accuracy.
