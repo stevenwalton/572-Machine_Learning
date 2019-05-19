@@ -14,6 +14,7 @@ from math import exp
 from math import sqrt
 
 MAX_ITERS = 100
+epsilon = 0.0001
 
 # Load data from a file
 def read_data(filename):
@@ -30,29 +31,50 @@ def read_data(filename):
     data.append( (x,y) )
   return (data, varnames)
 
+def sigmoid(z):
+    try:
+        return 1./(1.+exp(-z))
+    except OverflowError:
+        return 0.
 
 # Train a logistic regression model using batch gradient descent
 def train_lr(data, eta, l2_reg_weight):
-  numvars = len(data[0][0])
-  w = [0.0] * numvars
-  b = 0.0
-
-  #
-  # YOUR CODE HERE
-  #
-
-  return (w,b)
+   numvars = len(data[0][0])
+   w = [0.0] * numvars
+   b = 0.0
+   for itr in range(MAX_ITERS):
+      #print("itr:",itr)
+      # Some loop for all (x,y) in D do
+      g_w = [0.]*numvars
+      g_b = 0.
+      for i in range(len(data)):
+          (x,y) = data[i]
+          a = b
+          for d in range(numvars):
+              a += w[d]*x[d]
+          grad = -sigmoid(-y*a)*y
+          for j in range(numvars):
+              g_w[j] += x[j] * grad
+          g_b += grad
+      mag_g_w = 0
+      for d in range(numvars):
+          mag_g_w += g_w[d] * g_w[d]
+      mag_g_b = g_b * g_b
+      if (sqrt(mag_g_w + mag_g_b)) < epsilon:
+          return (w,b)
+      for d in range(numvars):
+          w[d] -= eta * (g_w[d] + l2_reg_weight * w[d])
+      b -= eta * g_b
+   return (w,b)
 
 # Predict the probability of the positive label (y=+1) given the
 # attributes, x.
 def predict_lr(model, x):
   (w,b) = model
-
-  #
-  # YOUR CODE HERE
-  #
-
-  return 0.5
+  a = b
+  for i in range(len(x)):
+      a += w[i]*x[i]
+  return sigmoid(a)
 
 
 # Load train and test data.  Learn model.  Report accuracy.
