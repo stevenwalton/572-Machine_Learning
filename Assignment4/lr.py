@@ -43,7 +43,6 @@ def train_lr(data, eta, l2_reg_weight):
    w = [0.0] * numvars
    b = 0.0
    for itr in range(MAX_ITERS):
-      #print("itr:",itr)
       # Some loop for all (x,y) in D do
       g_w = [0.]*numvars
       g_b = 0.
