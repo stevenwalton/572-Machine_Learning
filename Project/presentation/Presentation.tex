@@ -1,0 +1,211 @@
+\documentclass[pdf,11pt]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}       % Images
+\graphicspath{{Images/}}
+\usepackage{xcolor}         % Change Colors
+\usepackage{caption}
+\captionsetup[figure]{font=small}
+\usepackage{multimedia}     % Movies!
+\usepackage{tikz}           % Vectored pictures
+%\usepackage{media9}
+%\hypersetup{pdfpagemode=FullScreen} % Presentation Mode
+
+% Title
+\title{Generating Streamlines with Machine Learning}
+\author{Steven Walton\\ \small University of Oregon}
+\date{CIS 572: Machine Learning\\14 June 2019}
+
+% Background
+\usebackgroundtemplate
+{
+    \includegraphics[width=\paperwidth,height=\paperheight]{UOTemplate.png}
+}
+\definecolor{UOYellow}{HTML}{FDCB00}
+%\newcommand{\mytitle}[1]{\setcolor{bg=UOYellow,fg=green}\frametitle{{#1}}}
+
+% Formatting
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{normal text}{fg=white}
+\setbeamercolor{structure}{fg=white}        % Adjusts figures and frame titles
+\setbeamertemplate{frametitle}[default][center]
+\setbeamerfont{frametitle}{size=\Huge}
+%\setbeamerfont{normal text}{size=\LARGE}
+%\setbeamerfont{structure}{size=\LARGE}
+
+% Some personal options for trees
+\tikzset{
+    ->, 
+    level distance = 12em,
+    minimum size=2em,
+    %edge from parent/.style={draw,thick},
+    level 1/.style={sibling distance=6em},
+    level 2/.style={sibling distance=3em},
+    thick/.style = {line width=1.5pt},
+    extra thick/.style = {line width=3.5pt},
+    red node/.style={shape=circle,draw=red,fill=red!40,thick,inner sep=1.2},
+    blue node/.style={shape=circle,draw=blue,fill=blue!40,thick,inner sep=1.2}
+}
+
+
+% Make quadrant minipage
+\newcommand\Quadrents[4]{
+    \begin{minipage}[b][0.35\textheight][t]{0.49\textwidth}#1\end{minipage}\hfill
+    \begin{minipage}[b][0.35\textheight][t]{0.49\textwidth}#2\end{minipage}\\[0.5em]
+    \begin{minipage}[b][0.35\textheight][t]{0.49\textwidth}#3\end{minipage}\hfill
+    \begin{minipage}[b][0.35\textheight][t]{0.49\textwidth}#4\end{minipage}
+}
+
+\newcommand\Split[2]{
+    \begin{minipage}[b][0.35\textheight][t]{0.8\textwidth}#1\end{minipage}\\[2.0em]
+    \begin{minipage}[b][0.35\textheight][t]{0.8\textwidth}#2\end{minipage}
+}
+
+\begin{document}
+\frame{\titlepage}
+\begin{frame}
+\frametitle{What Are Streamlines?}
+\begin{columns}
+    \begin{column}{0.49\paperwidth}
+        \begin{itemize}
+            \item Field lines that show fluid flow
+            \item Tell scientists and engineers how fluids move around objects
+            \item Simulations create vector fields which we need to translate
+        \end{itemize}
+    \end{column}
+
+    \begin{column}{0.49\paperwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[height=0.5\textwidth]{potstreamlines.png}
+        \caption{Dense streamline of heated teapot}
+    \end{figure}
+    \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{What is a "good" streamline representation?}
+    \begin{columns}
+        \begin{column}{0.49\paperwidth}
+        \begin{itemize}
+            \item An unsolved problem!
+            \item Want something that shows key features in fluid flow
+            \item Don't want repetitive lines 
+            \item We want a compact and concise representation.
+        \end{itemize}
+        \end{column}
+%
+\begin{column}{0.49\paperwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[height=0.5\textwidth]{Harpoon.jpg}
+        \caption{Streamlines of Harpoon missile under water}
+    \end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Let's Ignore What is Good and Prototype}
+    \begin{columns}
+        \begin{column}{0.49\paperwidth}
+            \begin{itemize}
+                \item We'll concentrate on seeing if we can reduce complexity
+                \item We'll test supervised learning to see if we can encode basic info
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.49\paperwidth}
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.4\textwidth]{ABC_In.png}
+            \end{figure}
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.4\textwidth]{ABC_Out.png}
+            \end{figure}
+
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Let's Try Image Segmentation}
+    \begin{columns}
+        \begin{column}{0.49\paperwidth}
+            \begin{itemize}
+                \item Probably want some type of encoder
+                \item UNets are great at performing image segmentation
+                \item Don't expect to fully work, but let's see if we're on the right track
+            \end{itemize}
+        \end{column}
+
+        \begin{column}{0.49\paperwidth}
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{unet.jpg}
+                \caption{Sample Unet Configuration}
+            \end{figure}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Let's Train!}
+    \includegraphics<2>[width=0.8\textwidth]{out.png}
+    \includegraphics<3>[width=0.8\textheight]{SGD_Loss_lr0p01_batch20_mom0p5.png}
+    \includegraphics<4>[width=0.8\textheight]{SGD_Loss_lr0p01_batch20_mom0p8.png}
+    \includegraphics<5>[width=0.8\textheight]{SGD_Loss_lr0p01_batch20_mom0p9.png}
+    \includegraphics<6>[width=0.8\textheight]{SGD_Loss_lr0p05_batch20_mom0p5.png}
+    \includegraphics<7>[width=0.8\textheight]{SGD_Loss_lr0p05_batch20_mom0p8.png}
+    \includegraphics<8>[width=0.8\textheight]{SGD_Loss_lr0p05_batch20_mom0p9.png}
+    \includegraphics<9>[width=0.8\textheight]{SGD_Loss_lr0p1_batch20_mom0p5.png}
+    \includegraphics<10>[width=0.8\textheight]{SGD_Loss_lr0p1_batch20_mom0p8.png}
+    \includegraphics<11>[width=0.8\textheight]{SGD_Loss_lr0p1_batch20_mom0p9.png}
+    \includegraphics<12>[width=0.8\textheight]{SGD_Loss_lr0p2_batch20_mom0p5.png}
+    \includegraphics<13>[width=0.8\textheight]{SGD_Loss_lr0p2_batch20_mom0p8.png}
+    \includegraphics<14>[width=0.8\textheight]{SGD_Loss_lr0p2_batch20_mom0p9.png}
+    \includegraphics<15>[width=0.8\textheight]{SGD_Loss_lr0p5_batch20_mom0p5.png}
+    \includegraphics<16>[width=0.8\textheight]{SGD_Loss_lr0p5_batch20_mom0p8.png}
+    \includegraphics<17>[width=0.8\textheight]{SGD_Loss_lr0p5_batch20_mom0p9.png}
+    \includegraphics<18>[width=0.8\textheight]{SGD_Loss_lr0p8_batch20_mom0p5.png}
+    \includegraphics<19>[width=0.8\textheight]{SGD_Loss_lr0p8_batch20_mom0p8.png}
+    \includegraphics<20>[width=0.8\textheight]{SGD_Loss_lr0p8_batch20_mom0p9.png}
+    \includegraphics<21>[width=0.8\textheight]{ADAM_Loss_lr0p01_batch20.png}
+    \includegraphics<22>[width=0.8\textheight]{ADAM_Loss_lr0p05_batch20.png}
+    \includegraphics<23>[width=0.8\textheight]{ADAM_Loss_lr0p1_batch20.png}
+    \includegraphics<24>[width=0.8\textheight]{ADAM_Loss_lr0p2_batch20.png}
+    \includegraphics<25>[width=0.8\textheight]{ADAM_Loss_lr0p5_batch20.png}
+    \includegraphics<26>[width=0.8\textheight]{ADAM_Loss_lr0p8_batch20.png}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Lessons To Learn}
+    \begin{itemize}
+        \item<1-> Research is HARD!
+        \item<2-> Just because it is ML doesn't mean it can learn everything.
+        \item<3-> Searching around shows that autoencoders might be promising.
+        \item<4-> Every failure is another step in the process of solving hard problems.
+    \end{itemize}
+\end{frame}
+
+%\begin{frame}
+%    \frametitle{Let's Ignore What is Good and Prototype}
+%    \begin{columns}
+%        \begin{column}{0.49\paperwidth}
+%        \end{column}
+%
+%
+%        \begin{column}{0.49\paperwidth}
+%        \end{column}
+%    \end{columns}
+%\end{frame}
+
+\begin{frame}
+\centering
+\Huge{Questions?}\\
+\normalsize{(Let's look at code)}
+\end{frame}
+\end{document}
+
