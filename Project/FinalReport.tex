@@ -1,0 +1,67 @@
+\documentclass[12pt,letter]{article}
+\usepackage{geometry}\geometry{margin=0.75in}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{xcolor}	% Color words
+\usepackage{cancel}	% Crossing parts of equations out
+\usepackage{tikz}    	% Drawing 
+\usepackage{pgfplots}   % Other plotting
+\usepgfplotslibrary{colormaps,fillbetween}
+\usepackage{placeins}   % Float barrier
+\usepackage{hyperref}   % Links
+\usepackage{tikz-qtree} % Trees
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{multicol}
+\usepackage{graphicx}   % For graphics
+\usepackage{parcolumns}
+\usepackage{listings}   % lstlisting
+\usepackage{pgfgantt}
+\graphicspath{{Images/}{Presentation/Images/}}
+
+%\tikzset{
+%    treenode/.style = {shape=rectangle, rounded corners, draw, align=center}
+%    root/.style     = {treenode, font=\Large}
+%    env/.style      = {treenode, font=\ttyfamily\normalsize},
+%    dummy/.style    = {circle,draw}
+%}
+
+%\tikzset{every tree node/.style={circle,align=center, anchor=west, grow=right}
+%	}
+\tikzset{every tree node/.style={align=center,minimum width=2em},%, draw},%, circle},
+	 grow=right,
+	 level distance=1.75cm}
+
+% Don't indent
+\setlength{\parindent}{0pt}
+% Function to replace \section with a problem name specifically formatted
+\newcommand{\problem}[1]{\vspace{3mm}\Large\textbf{{Problem {#1}\vspace{3mm}}}\normalsize\\}
+% Formatting function, like \problem
+\newcommand{\ppart}[1]{\vspace{2mm}\large\textbf{\\Part {#1})\vspace{2mm}}\normalsize\\}
+\newcommand{\documentation}[1]{\vspace{2mm}\large\textbf{\\Documentation{#1}\vspace{2mm}}\normalsize\\}
+% Formatting 
+\newcommand{\condition}[1]{\vspace{1mm}\textbf{{#1}:}\normalsize\\}
+
+\begin{document}
+\title{CIS 572: Streamline via Machine Learning\\
+\large Algorithmic Development}
+\author{Steven Walton}
+\maketitle
+
+\input{Abstract}
+\input{ProjectDescription}
+\FloatBarrier
+\input{Background}
+\FloatBarrier
+\input{Experiments}
+\FloatBarrier
+\input{Conclusion}
+\FloatBarrier
+
+%\bibliographystyle{plain}
+%\bibliography{bibliography}
+
+
+
+\end{document}
