@@ -1,17 +1,139 @@
-\Section{Background}
+\section{Background}
+Scientists use flow visualization techniques to understand the basics of how
+fluids move in various conditions. This can range from the water flowing in
+the oceans, global wind data, to how fuel moves inside a rocket engine. 
+Understanding fluid flow has been a great challenge for scientists for a long
+time. 
+
+When solving these systems scientists use vector fields placed at each location
+within the geometry, denoting the direction and magnitude of the fluid flow. 
+By calculating these vectors a scientist can track how a particle moves about
+its environment. Computation becomes increasingly difficult when these vector 
+fields start changing as a function of time, these simulations are more 
+representative of real world phenomena. 
+
+The difficulty with vector field representations is that it would be impossible 
+to visualize. If we have to draw a vector, with length representing magnitude, 
+at every single point in a geometry then they would completely overlap and 
+you'd just see a completely black image. This can be partially solved by using
+a sparse representation of vectors. Figure~\ref{fig:vec} shows an example
+of this type of sparse representation. In this figure we can see that there are 
+two sinks, areas where flow goes into (such as a kitchen sink), and many 
+areas where fluid flows at different velocities and directions. There is a lot
+of information to process in this image and it can be difficult to tell what
+is happening.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{vecField.jpg}
+    \caption{Sample vector field}
+    \label{fig:vec}
+\end{figure}
+
+
+\FloatBarrier
 \subsection{Streamlines}
 A streamline is defined as a line that shows how fluid flows. These are used in 
 scientific visualization to help scientists visualize what is happening within
 fluids. Generally these are used because the vector field, which is what is used
 in the simulation data, is too information dense and difficult to make sense of.
 A good streamline is one that has sparse representation of the fluid
-but also shows all key features. 
+but also shows all key features. Figure~\ref{fig:teapot} shows an example of 
+streamlines in a teapot, representing the heat. We can see that 
+while this representation is easier to understand than those from the vector 
+field, it is still cumbersome. 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.4\textwidth]{potstreamlines.png}
+    \caption{Streamlines Depicting Heat in a Tea Pot}
+    \label{fig:teapot}
+\end{figure}
 
-This is an unsolved problem in scientific visualization because it is hard to 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{streamlines.png}
+    \caption{Different Streamline Representations of the Same Fluid Flow with
+    50 Streamlines\cite{Sane}}
+    \label{fig:sl}
+\end{figure}
+
+Generating streamlines that are both sparse and representative is an unsolved 
+problem in scientific visualization because it is hard to 
 define what a good representation is. Key features are also difficult to define.
 Features that are important are sources, sinks, and flow direction. What can
 be difficult is the interaction between these features. Straight flow lines 
 bend around sources and sinks even if they do not enter them. This creates a lot
 of open questions. Such as: ``How different do streamlines need to be?" and 
 ``At what point do we start drawing and terminate a line?". 
-\end{section}
+Verma eta al.\cite{Verma} were the first to define the desired characteristics
+of streamlines, naming the three criteria as: Coverage; Uniformity; and 
+Continuity. Coverage refers to ensuring that streamlines convey key features,
+or regions of interest. Uniformity is defined such that streamlines should
+be uniformly distributed over a field, meaning that there shouldn't be large 
+empty spaces in some areas and highly dense areas in others. Continuity is
+defined as an aesthetic interest, mainly in that longer streamlines are preferred.
+Figure~\ref{fig:sl}
+shows how two different streamline representations can convey different 
+information. The red areas in Image B show different sources and sinks that
+aren't as apparent or sometimes non-existent. In the blue regions of Image
+A we can see some repetitive lines, ones that aren't in Image B. 
+
+\FloatBarrier
+\subsection{Techniques to Generate Streamlines}
+Sane~\cite{Sane} collected a large number of modern techniques used for 
+streamline selection for his area exam. Within this work he discusses the use
+of seed placement and streamline selections. That is by placing a point within
+a vector field, following its movement and selecting proper streamlines to draw
+based on these seed placements. In this paper he lists the common practices
+for generating streamlines. The three major categories are: density based
+techniques, feature based, and similarity based techniques. Density based
+focuses on creating evenly-spaced streamlines within the image space. Feature
+based techniques are formed from vector fields and focus on identifying key
+features, such as: centers, sources, sinks, repelling-spirals, 
+attracting-spirals, and saddles. See Figure~\ref{fig:features}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Features.png}
+    \caption{Types of Features~\cite{Verma}}
+    \label{fig:features}
+\end{figure}
+
+\FloatBarrier
+Similarity based techniques focus on reducing the number of streamlines to 
+reduce the similarity between different lines. Figure~\ref{fig:sim} shows 
+three different streamlines that have different types of similarities. It
+is clear that in (a) that these lines are redundant because $p_i$ is close
+to $q_i$. Conversely we can see that while (b) and (c) look similar they
+go in different directions. For similarity based techniques we not only care
+about the shape of the streamlines, but also the orientation similarity.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Similarity.png}
+    \caption{Showing Similarity in (a) and differences in (b) and (c)~\cite{Chen}}
+    \label{fig:sim}
+\end{figure}
+\FloatBarrier
+
+In the similarity based techniques approach we find a subsection of machine
+learning that includes work with SVM's~\cite{Li} and DNN Feature Descriptions
+\cite{Han}. Li's~\cite{Li} work focuses on uses binary support vector machines
+to determine which streamlines are similar and removes ones that are considered
+too similar. This method work does not account for what humans consider to be
+important. Han et al.'s~\cite{Han} work uses a CNN across 3D image data and then
+uses an autoencoder to learn what the minimum number of streamlines are needed
+to represent a cluster of streamlines. They use the sum of the Euclidean distance
+to all other points in a cluster and identify its minimum. While this technique
+was successful it takes a significant amount of time to train and does not 
+generalize to arbitrary streamlines. Figure~\ref{fig:FN} shows the machine
+learning model used by Han et al. The voxel information is the 3D image data
+that is being used as an input into the 3D convolutional layer. The inability
+to create a generalized model is the major drawback of this technique.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.1\textwidth]{FlowNet.png}
+    \caption{FlowNet Model}
+    \label{fig:FN}
+\end{figure}

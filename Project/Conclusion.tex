@@ -1,0 +1,41 @@
+\section{Conclusion}
+Unfortunately this work did not prove fruitful. While it was not expected to 
+show groundbreaking work, we did not expect the results to be as terrible as
+they turned out to be. From these results we can conclude that a UNet is
+not the appropriate model to use for generating anything close to 
+streamline images nor for identifying regions of interest. We believe that
+a substantially more complicated network will need to be used to make
+progress.
+
+\subsection{Future Work}
+Being an open problem and that machine learning in scientific visualization
+is a relatively unexplored work there is more than ample reason to continue
+to pursue this problem. While replicating the model from Han et al was outside
+the scope of this class, it seems like a reasonable next step. Verifying and
+testing their model would be the best stepping stone to work from. This 
+would be good work to attempt over the summer. It would
+be interesting to test variational autoencoders and test against the results
+of FlowNet. This is suspected to be a significant undertaking and that tuning
+the hyper-parameters will take significant time. Work also needs to be done 
+to generalize a machine learning model to generate streamlines. This is the
+major downfalls of the works referenced in the Background section. For a 
+machine learning technique to truly be considered successful it needs to be
+able to generalize its solution. While the referenced work was insightful
+and shows promise, there is much work to be done before we see machine
+learning used in the generation of streamlines.
+
+While Han et al. and Li et al.'s work focused on similarity based
+techniques there are, to the author's knowledge, no research done in exploring
+machine learning through density or feature based streamline generation. It
+also appears that work has not been done to directly take in vector field data
+and generate streamlines from this. Since one can think of streamlines as 
+an encoding of vector fields it may be interesting to explore the use
+of various types of encoders, in combination with other networks, to generate
+streamlines. Specifically one can think about features being the key features
+that need to be encoded, so it may be possible to be extract features from 
+vector field data. Potentially some form of CNN may be able to extract these
+features as well. We believe that the promising direction for generating 
+streamlines from vector field data would be using a feature based technique,
+where a model could identify the key features previously listed. If a model 
+only showed these features this would be considered major progress and show 
+promise for this type of work.

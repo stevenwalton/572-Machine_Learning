@@ -1,0 +1,113 @@
+\section{Model}
+In this work we use a UNet and attempt to perform image segmentation a set of 
+representative streamlines for two common flow types: ABC and Radial. Figure 
+\ref{fig:unet} shows an example of a UNet model. A UNet was chosen because it
+has an encoding and decoding side. One the input it down samples an image and
+on the output side it upsamples, training on different input and output images,
+commonly called masks. 
+
+\begin{figure}[ht]
+\centering
+    \includegraphics[width=0.5\textwidth]{unet.jpg}
+    \caption{Unet model~\cite{Ronneberger}}
+    \label{fig:unet}
+\end{figure}
+
+In this work we generated dense and ``sparse" streamlines, using the sparse
+as the image mask. 
+
+\subsection{Creating Streamlines}
+Included in the code package is a C++ file called ``advect.cpp" that was written
+to generate streamline files. At the top of this code are options to change
+how and what streamlines are generated and where the files will be written to.
+This file contains functions to generate ABC, Radial, and Gyre flow fields. 
+Generally we used 100 lines for the dense representation and 10 for the sparse.
+Other sizes were tried but these sizes led to fast computation and did not
+change the results of the network. 
+
+The C++ file generates files with the extension ``.lines". These files can be
+used to visualize our streamlines in a program such as Visit~\cite{HPV:VisIt}
+A python script, called ``visit\_script.py", was used to generate all images
+from a specified directory and output them in another directory. Finally a
+script, called ``convertToPIL.py", was used to convert these images into 
+Python's Imaging Library (PIL) format, which consists of 3-Channels and can be
+easily read by PyTorch. This convert file was used because it simplified the
+process and greatly reduced the size of the data, as the dense streamline
+files can easily take a few hundred gigs of storage space. 
+These files also allowed us to modify images fairly easily. 
+
+\subsection{Training and Evaluation}
+For the UNet model we used Pytorch-UNet~\cite{milesial} as a base and modified
+the training and prediction algorithms. Changes were made to the network to both
+update for the newer versions of PyTorch, changes to the network were made to 
+allow for use of our input images and changing kernel sizes, as well as options
+were added to test different different hyperparameters, and of course 
+debugging the original author's work. This lead to a much
+better understanding of PyTorch than the authors of this work previously had. 
+
+Initially the network was trained on large images, size 1024x1024. It was found
+that this was taking substantial time, was not training well, and did not fit 
+on the GPU. Images were then tried at 512x512 and finally 184x184. The final 
+size was found to fit on the GPU, still contained images where the operators 
+could determine streamlines, and new test cases could be generated quickly. 
+
+The work started by focusing on Radial images, as these were the simplest. 
+Initial test sizes included about 5000 input images and corresponding masks. 
+A validation size of 20\% was constantly used throughout the experimentation.
+An epoch size of 1000 was set to run over night and took many hours to complete.
+Ultimately this did not prove fruitful and unfortunately the loss did not
+vary significantly between epochs.
+Figure~\ref{fig:Rad} shows a sample image from the input set~\ref{fig:Radial_in},
+a sample mask~\ref{fig:Radial_mask}, and the resultant output from the test
+\ref{fig:output}. 
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.4\linewidth]{input.png}
+        \caption{Radial Input}
+        \label{fig:Radial_in}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.4\linewidth]{mask.png}
+        \caption{Radial Mask}
+        \label{fig:Radial_mask}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=0.4\linewidth]{out.png}
+        \caption{Output from Network}
+        \label{fig:output}
+    \end{subfigure}
+    \caption{Input and mask of Radial Streamlines}
+    \label{fig:Rad}
+\end{figure}
+
+As this did not go well an attempt was made using ABC inputs and masks. Similarly
+this did not result in a good output. Figure~\ref{fig:adam} shows a 
+representative out output of the absolute value of the loss vs the number of
+epochs the network was trained on. All test cases showed similar results. 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.4\linewidth]{ADAM_Loss_lr0p05_batch20.png}
+    \caption{Loss per epoch using ADAM}
+    \label{fig:adam}
+\end{figure}
+
+After ABC and Radial failed an experiment was done just to see if have a 
+a combination of the two would produce different results. 500 images from each
+were randomly selected and used to train, for a total of a thousand images. 
+Unfortunately this did not result in a change in the loss. We tried SGD as
+well as ADAM and batched up a process to test vary learning rates, momentum, 
+and batch sizes. The number of epochs was reduced to 20 as it was judged that if
+learning did not start by that point it was unlikely to learn in longer
+iterations. We also tried to change the depth of the network but this did not
+prove to be fruitful. Adding an extra layer did not change the loss in a 
+significant way nor did it show that there was any improvement between
+epochs. 
+It was decided to not test the Gyre images as these were more 
+complicated and if the UNet could not learn a simple Radial streamline 
+it was not going to learn more complex features. 
